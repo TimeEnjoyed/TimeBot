@@ -1,0 +1,2 @@
+discord.py>=2.0.1
+twitchio>=2.8.2
