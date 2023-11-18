@@ -1,0 +1,84 @@
+[tool.black]
+line-length = 120
+preview = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+select = [
+    "C4",
+    "F",
+    "G",
+    "I",
+    "PTH",
+    "RUF",
+    "SIM",
+    "TCH",
+    "UP",
+    "W",
+    "PERF",
+    "ANN",
+]
+ignore = [
+    "F401",
+    "F402",
+    "F403",
+    "F405",
+    "PERF203",
+    "RUF001",
+    "RUF009",
+    "SIM105",
+    "UP034",
+    "UP038",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+    "PTH123",
+    "G004",
+]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "double"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+typeCheckingMode = "basic"
+pythonVersion = "3.11"
+exclude = ["venv", ".venv"]
