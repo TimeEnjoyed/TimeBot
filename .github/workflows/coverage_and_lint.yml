@@ -1,0 +1,43 @@
+name: Type Coverage and Linting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+  
+    name: "Type Coverage and Linting @ Python 3.11"
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Setup Python @ 3.11"
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      
+      - name: "Install Python deps @ 3.11"
+        id: install-deps
+        run: |
+          pip install -Ur requirements.txt
+      
+      - name: "Run Pyright @ 3.11"
+        uses: jakebailey/pyright-action@v1
+        with:
+          warnings: false
+
+      - name: "Run Ruff @ 3.11"
+        uses: chartboost/ruff-action@v1
