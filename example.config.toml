@@ -1,0 +1,8 @@
+[DISCORD]
+prefix = ""
+token = ""
+
+[TWITCH]
+prefix = ""
+token = ""
+channels = ["timeenjoyed"]
