@@ -6,3 +6,10 @@ token = ""
 prefix = ""
 token = ""
 channels = ["timeenjoyed"]
+
+[API]
+prefix = ""
+port = 2536
+
+[DATABASE]
+dsn = "postgresql://USER:PASSWORD@localhost:5432/timeenjoyed"

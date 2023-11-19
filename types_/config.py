@@ -26,6 +26,17 @@ class Twitch(TypedDict):
     channels: list[str]
 
 
+class Api(TypedDict):
+    prefix: str
+    port: int
+
+
+class Database(TypedDict):
+    dsn: str
+
+
 class Config(TypedDict):
     DISCORD: Discord
     TWITCH: Twitch
+    API: Api
+    DATABASE: Database
