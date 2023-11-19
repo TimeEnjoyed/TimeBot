@@ -16,19 +16,29 @@ import asyncio
 import logging
 
 import discord
+import uvicorn
 
 import core
 
 
 async def main() -> None:
-    async with core.DiscordBot() as dbot:
-        discord.utils.setup_logging(level=logging.INFO)
+    discord.utils.setup_logging(level=logging.INFO)
+
+    async with core.DiscordBot() as dbot, core.Database() as database:
+        # Init the API Server...
+        app: core.Server = core.Server(database=database)
 
         # Init and run the Twitch Bot in the background...
         tbot: core.TwitchBot = core.TwitchBot()
         _: asyncio.Task = asyncio.create_task(tbot.start())
 
-        await dbot.start(core.config["DISCORD"]["token"])
+        # Init and run the Discord Bot in the background...
+        _: asyncio.Task = asyncio.create_task(dbot.start(core.config["DISCORD"]["token"]))
+
+        # Configure Uvicorn to run our API and keep the asyncio event loop running...
+        config = uvicorn.Config(app, host="0.0.0.0", port=core.config["API"]["port"])
+        server = uvicorn.Server(config)
+        await server.serve()
 
 
 asyncio.run(main())
