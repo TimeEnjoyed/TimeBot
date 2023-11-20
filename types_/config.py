@@ -24,11 +24,14 @@ class Twitch(TypedDict):
     prefix: str
     token: str
     channels: list[str]
+    client_id: str
+    client_secret: str
 
 
 class Api(TypedDict):
     prefix: str
     port: int
+    public_host: str
 
 
 class Database(TypedDict):

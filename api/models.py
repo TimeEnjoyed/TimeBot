@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import datetime
 
 
-__all__ = ("UserModel", )
+__all__ = ("UserModel",)
 
 
 class UserModel:
@@ -40,5 +40,5 @@ class UserModel:
             "twitch_id": self.twitch_id,
             "moderator": self.moderator,
             "token": self.token,
-            "created": self.created.isoformat()
+            "created": self.created.isoformat(),
         }

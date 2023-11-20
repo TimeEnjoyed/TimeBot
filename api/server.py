@@ -22,13 +22,14 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 import core
+from middleware import AuthBackend
+from routes import *
 
 from .core import Application, View
-from .middleware.auth import AuthBackend
 
 
 if TYPE_CHECKING:
-    from ..database import Database
+    from database import Database
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,17 +38,14 @@ class Server(Application):
     def __init__(self, *, database: Database) -> None:
         self.database = database
 
-        views: list[View] = []
+        views: list[View] = [OAuthView(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
         ]
 
         super().__init__(
-            prefix=core.config["API"]["prefix"],
-            views=views,
-            middleware=middleware,
-            on_startup=[self.on_ready]
+            prefix=core.config["API"]["prefix"], views=views, middleware=middleware, on_startup=[self.on_ready]
         )
 
     async def on_ready(self) -> None:

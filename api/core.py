@@ -23,6 +23,8 @@ from starlette.responses import Response
 from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
+from core.config import config
+
 
 __all__ = (
     "route",
@@ -31,7 +33,8 @@ __all__ = (
     "WebsocketCloseCodes",
     "WebsocketOPCodes",
     "WebsocketSubscriptions",
-    "WebsocketNotificationTypes"
+    "WebsocketNotificationTypes",
+    "config",
 )
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
@@ -208,13 +211,11 @@ class Application(Starlette):
 
 
 class WebsocketCloseCodes:
-
     NORMAL: int = 1000
     ABNORMAL: int = 1006
 
 
 class WebsocketOPCodes:
-
     # Sent...
     HELLO: int = 0
     EVENT: int = 1
@@ -230,7 +231,6 @@ class WebsocketSubscriptions:
 
 
 class WebsocketNotificationTypes:
-
     # Subscriptions...
     SUBSCRIPTION_ADDED: str = "subscription_added"
     SUBSCRIPTION_REMOVED: str = "subscription_removed"

@@ -20,10 +20,9 @@ from starlette.authentication import AuthCredentials, AuthenticationBackend, Bas
 
 
 if TYPE_CHECKING:
-    from api.models import UserModel
-    from api.server import Server
     from starlette.requests import HTTPConnection
 
+    from api import Server, UserModel
 
 
 class User(BaseUser):
