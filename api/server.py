@@ -38,7 +38,7 @@ class Server(Application):
     def __init__(self, *, database: Database) -> None:
         self.database = database
 
-        views: list[View] = [OAuthView(self)]
+        views: list[View] = [OAuthView(self), QuotesView(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),

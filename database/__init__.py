@@ -88,3 +88,38 @@ class Database:
 
         assert row
         return UserModel(record=row)
+
+    async def add_quote(
+        self, content: str, *, added_by: str | int, source: str, user: str | int | None = None
+    ) -> asyncpg.Record:
+        assert self.pool
+
+        query: str = """
+        INSERT INTO quotes (content, added_by, source, speaker)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+        """
+
+        async with self.pool.acquire() as connection:
+            if user:
+                user = int(user)
+
+            try:
+                row: asyncpg.Record = await connection.fetchrow(query, content, int(added_by), source, user)  # type: ignore
+            except asyncpg.UniqueViolationError:
+                raise ValueError("Quote already exists.")
+
+        assert row
+        return row
+
+    async def fetch_quote(self, id_: int, /) -> asyncpg.Record | None:
+        assert self.pool
+
+        query: str = """
+        SELECT * FROM quotes WHERE id = $1
+        """
+
+        async with self.pool.acquire() as connection:
+            row: asyncpg.Record | None = await connection.fetchrow(query, id_)
+
+        return row

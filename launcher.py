@@ -26,12 +26,13 @@ from database import Database
 async def main() -> None:
     discord.utils.setup_logging(level=logging.INFO)
 
-    async with core.DiscordBot() as dbot, Database() as database:
+    async with Database() as database, core.DiscordBot(database=database) as dbot:
         # Init the API Server...
         app: api.Server = api.Server(database=database)
 
         # Init and run the Twitch Bot in the background...
-        tbot: core.TwitchBot = core.TwitchBot()
+        tbot: core.TwitchBot = core.TwitchBot(dbot=dbot, database=database)
+        dbot.tbot = tbot
         _: asyncio.Task = asyncio.create_task(tbot.start())
 
         # Init and run the Discord Bot in the background...
