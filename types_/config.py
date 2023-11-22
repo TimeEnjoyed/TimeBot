@@ -38,8 +38,13 @@ class Database(TypedDict):
     dsn: str
 
 
+class General(TypedDict):
+    stream_refs_id: int
+
+
 class Config(TypedDict):
     DISCORD: Discord
     TWITCH: Twitch
     API: Api
     DATABASE: Database
+    GENERAL: General
