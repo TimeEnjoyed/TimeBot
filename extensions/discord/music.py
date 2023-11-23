@@ -325,13 +325,15 @@ class Music(commands.Cog):
 
         if player and not player.loaded:  # type: ignore
             await player.disconnect()
+            player = None  # type: ignore
 
-        try:
-            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
-            player.loaded = None  # type: ignore
-        except discord.ClientException:
-            await ctx.send("Please connect to a voice channel first!")
-            return
+        if not player:
+            try:
+                player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+                player.loaded = None  # type: ignore
+            except discord.ClientException:
+                await ctx.send("Please connect to a voice channel first!")
+                return
 
         player.autoplay = wavelink.AutoPlayMode.disabled
 
