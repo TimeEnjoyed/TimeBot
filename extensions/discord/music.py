@@ -60,6 +60,16 @@ class RequestView(discord.ui.View):
         self._disable_all_buttons()
         await self.message.edit(view=self)
 
+        channel: twitchio.Channel = self.cog.bot.tbot.get_channel("timeenjoyed")  # type: ignore
+        await channel.send(f"@{self.track.twitch_user.name} - Your song request was automatically accepted.")  # type: ignore
+
+        if self.player.current == self.player.loaded:  # type: ignore
+            await self.player.play(self.track, replace=True)
+        else:
+            self.player.queue.put(self.track)
+
+        await self.cog.update_redemption(data=self.data, status="FULFILLED")
+
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
     async def accept(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
@@ -76,6 +86,8 @@ class RequestView(discord.ui.View):
 
         self._disable_all_buttons()
         await self.message.edit(view=self)
+
+        self.stop()
 
     @discord.ui.button(label="Accept and Refund", style=discord.ButtonStyle.blurple)
     async def accept_refund(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
@@ -94,6 +106,8 @@ class RequestView(discord.ui.View):
         self._disable_all_buttons()
         await self.message.edit(view=self)
 
+        self.stop()
+
     @discord.ui.button(label="Deny and Refund", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
@@ -105,6 +119,8 @@ class RequestView(discord.ui.View):
 
         self._disable_all_buttons()
         await self.message.edit(view=self)
+
+        self.stop()
 
 
 class Music(commands.Cog):
@@ -269,8 +285,6 @@ class Music(commands.Cog):
         if not elevated:
             if player.current == player.loaded:  # type: ignore
                 await player.play(track, replace=True)
-                await channel.send(f"Now Playing: {track} requested by @{user_login}")
-
             else:
                 player.queue.put(track)
                 await channel.send(f"@{user_login} - Added the song {track} by {track.author} to the queue.")
@@ -292,22 +306,6 @@ class Music(commands.Cog):
 
         view: RequestView = RequestView(data=data, cog=self, player=player, track=track)
         view.message = await player.channel.send(embed=embed, view=view)
-
-    @commands.hybrid_command()
-    @commands.guild_only()
-    async def connect(self, ctx: commands.Context) -> None:
-        player: wavelink.Player
-
-        try:
-            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
-        except discord.ClientException:
-            player = cast(wavelink.Player, ctx.voice_client)
-        except AttributeError:
-            await ctx.send("Please connect to a voice channel first!")
-            return
-
-        player.loaded = None  # type: ignore
-        await ctx.send(f"Connected: {player}")
 
     @commands.hybrid_command()
     @commands.guild_only()
@@ -346,11 +344,74 @@ class Music(commands.Cog):
 
         if not player.current or player.current == player.loaded:  # type: ignore
             await player.play(track, replace=True)
-            player.loaded = track  # type: ignore
-        else:
-            player.loaded = track  # type: ignore
 
+        player.loaded = track  # type: ignore
         await ctx.send("Successfully setup the stream player!")
+
+    @commands.hybrid_command(aliases=["dc", "stop"])
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def disconnect(self, ctx: commands.Context) -> None:
+        """Disconnect the player and clear the state."""
+        await ctx.defer()
+
+        player: wavelink.Player
+        player = cast(wavelink.Player, ctx.voice_client)
+
+        if not player:
+            await ctx.reply("I am not currently connected.")
+            return
+
+        await player.disconnect()
+        await ctx.reply("Successfully disconnected the player.")
+
+    @commands.hybrid_command(aliases=["vol"])
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def volume(self, ctx: commands.Context, *, value: commands.Range[int, 5, 50] = 20) -> None:
+        """Set the volume of the player.
+
+        Parameters
+        ----------
+        value: int
+            A number between 5 and 50.
+        """
+        await ctx.defer()
+
+        player: wavelink.Player
+        player = cast(wavelink.Player, ctx.voice_client)
+
+        if not player:
+            await ctx.reply("I am not currently connected.")
+            return
+
+        await player.set_volume(value)
+        await ctx.reply(f"Set the volume to **`{value}`**")
+
+    @commands.hybrid_command(aliases=["pause", "resume"])
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def toggle(self, ctx: commands.Context) -> None:
+        """Toggle the paused state of the player.
+
+        If the player is currently paused this will resume the player.
+        If the player is not currently paused, this will pause the player.
+        """
+        await ctx.defer()
+
+        player: wavelink.Player
+        player = cast(wavelink.Player, ctx.voice_client)
+
+        if not player:
+            await ctx.reply("I am not currently connected.")
+            return
+
+        await player.pause(not player.paused)
+
+        if player.paused:
+            await ctx.reply("Paused the player.")
+        else:
+            await ctx.reply("Resumed the player.")
 
 
 async def setup(bot: core.DiscordBot) -> None:
