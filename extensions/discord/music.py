@@ -92,7 +92,11 @@ class Music(commands.Cog):
         with open(".secrets.json") as fp:
             json_: dict[str, Any] = json.load(fp)
 
-        headers: dict[str, str] = {"Authorization": f"Bearer {json_['token']}"}
+        headers: dict[str, str] = {
+            "Authorization": f"Bearer {json_['token']}",
+            "Client-Id": core.config["TWITCH"]["client_id"],
+        }
+
         async with self.session.patch(url, json={"status": status}, headers=headers) as resp:
             if resp.status != 200:
                 logger.error("Failed to change redemption status: %s (Code: %s)", resp.reason, resp.status)
