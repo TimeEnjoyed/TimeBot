@@ -230,16 +230,17 @@ class Music(commands.Cog):
         }
 
         async with self.session.patch(url, json={"status": status}, headers=headers) as resp:
-            if resp.status != 200:
-                logger.error("Failed to change redemption status: %s (Code: %s)", resp.reason, resp.status)
-                return
-
             if resp.status == 401:
                 new: str | None = await self.refresh_token(json_["refresh"])
                 if not new:
                     return
 
                 return await self.update_redemption(data=data, status=status)
+
+            if resp.status != 200:
+                body: str = await resp.text()
+                logger.error("Failed to change redemption status: %s (Code: %s)", body, resp.status)
+                return
 
             logger.info("Changed redemption status for <%s> to %s", redeem_id, status)
 
