@@ -12,9 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from __future__ import annotations
+
 import json
 import logging
-from typing import Any, Literal, cast
+from typing import Any, Literal, Optional, cast
 from urllib.parse import quote
 
 import aiohttp
@@ -28,6 +30,81 @@ import core
 
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class RequestView(discord.ui.View):
+    message: discord.Message | discord.WebhookMessage
+
+    def __init__(
+        self,
+        *,
+        timeout: float | None = 300,
+        data: dict[str, Any],
+        cog: Music,
+        player: wavelink.Player,
+        track: wavelink.Playable,
+    ) -> None:
+        super().__init__(timeout=timeout)
+
+        self.data = data
+        self.player = player
+        self.track = track
+        self.cog = cog
+
+    def _disable_all_buttons(self) -> None:
+        for item in self.children:
+            if isinstance(item, (discord.ui.Button, discord.ui.Select)):
+                item.disabled = True
+
+    async def on_timeout(self) -> None:
+        self._disable_all_buttons()
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
+        await interaction.response.defer()
+
+        channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
+        await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
+
+        if self.player.current == self.player.loaded:  # type: ignore
+            await self.player.play(self.track, replace=True)
+        else:
+            self.player.queue.put(self.track)
+
+        await self.cog.update_redemption(data=self.data, status="FULFILLED")
+
+        self._disable_all_buttons()
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Accept and Refund", style=discord.ButtonStyle.blurple)
+    async def accept_refund(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
+        await interaction.response.defer()
+
+        channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
+        await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
+
+        if self.player.current == self.player.loaded:  # type: ignore
+            await self.player.play(self.track, replace=True)
+        else:
+            self.player.queue.put(self.track)
+
+        await self.cog.update_redemption(data=self.data, status="CANCELED")
+
+        self._disable_all_buttons()
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Deny and Refund", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
+        await interaction.response.defer()
+
+        channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
+        await channel.send(f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator.")  # type: ignore
+
+        await self.cog.update_redemption(data=self.data, status="CANCELED")
+
+        self._disable_all_buttons()
+        await self.message.edit(view=self)
 
 
 class Music(commands.Cog):
@@ -150,17 +227,32 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
         track.twitch_user = user  # type: ignore
 
-        if elevated:
-            if player.queue:
+        if not elevated:
+            if player.current == player.loaded:  # type: ignore
+                await player.play(track, replace=True)
+                await channel.send(f"Now Playing: {track} requested by @{user_login}")
+
+            else:
                 player.queue.put(track)
                 await channel.send(f"@{user_login} - Added the song {track} by {track.author} to the queue.")
-            else:
-                await player.play(track)
-                await channel.send(f"Now Playing: {track} requested by @{user_login}")
 
             return await self.update_redemption(data=data, status="FULFILLED")
 
-        ...
+        embed: discord.Embed = discord.Embed(title="Stream Song Request", colour=0xFF888)
+        embed.set_author(url=f"https://twitch.tv/{user_login}", name=user.display_name, icon_url=user.profile_image)
+        embed.set_thumbnail(url=user.profile_image)
+        embed.description = f"Requested the track: **`{track}`** by **`{track.author}`**"
+
+        seconds, milliseconds = divmod(track.length, 1000)
+        minutes, seconds = divmod(seconds, 60)
+
+        embed.add_field(name="URL/Link", value=f"[Track URL]({track.uri})")
+        embed.add_field(name="Service", value=f"**`{track.source}`**")
+        embed.add_field(name="Duration", value=f"**`{minutes} minutes, {seconds} seconds`**")
+        embed.set_image(url=track.artwork)
+
+        view: RequestView = RequestView(data=data, cog=self, player=player, track=track)
+        view.message = await player.channel.send(embed=embed, view=view)
 
     @commands.hybrid_command()
     @commands.guild_only()
@@ -175,6 +267,7 @@ class Music(commands.Cog):
             await ctx.send("Please connect to a voice channel first!")
             return
 
+        player.loaded = None  # type: ignore
         await ctx.send(f"Connected: {player}")
 
 
