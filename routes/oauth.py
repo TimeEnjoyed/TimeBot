@@ -92,12 +92,14 @@ class OAuth(View):
             return Response(f"Bad request: {e}", status_code=400)
 
         if twitch_id == int(config["TIME_SUBS"]["twitch_id"]):
-            with open(".secrets.json", "w+") as fp:
+            with open(".secrets.json", "r+") as fp:
                 current: dict[str, str] = json.load(fp)
 
                 current["token"] = access
                 current["refresh"] = refresh
 
+                fp.seek(0)
                 json.dump(current, fp=fp)
+                fp.truncate()
 
         return Response("Success, you may close this window!", status_code=200)
