@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import secrets
 from typing import Any, Self
 
 import asyncpg
@@ -43,6 +44,22 @@ class Database:
                 await connection.execute(schema.read())
 
         return self
+
+    async def create_state(self, *, discord_id: int, moderator: bool = False) -> str:
+        assert self.pool
+
+        query: str = """
+        INSERT INTO state(code, discord_id, moderator)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (discord_id) DO UPDATE
+        SET code = $1
+        """
+
+        code: str = secrets.token_urlsafe(16)
+        async with self.pool.acquire() as connection:
+            await connection.execute(query, code, discord_id, moderator)
+
+        return code
 
     async def fetch_user(self, token: str) -> None:
         ...

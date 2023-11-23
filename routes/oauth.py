@@ -14,6 +14,7 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import json
 import logging
 from typing import TYPE_CHECKING
 
@@ -60,12 +61,14 @@ class OAuth(View):
         if not code:
             return Response("Unable to Authenticate on Twitch.", status_code=400)
 
-        url: str = f"""{TWITCH_BASE}?
-        client_id={CLIENT_ID}&
-        client_secret={CLIENT_SECRET}&
-        code={code}&
-        grant_type=authorization_code&
-        redirect_uri={REDIRECT}"""
+        url: str = (
+            f"{TWITCH_BASE}?"
+            f"client_id={CLIENT_ID}&"
+            f"client_secret={CLIENT_SECRET}&"
+            f"code={code}&"
+            "grant_type=authorization_code&"
+            f"redirect_uri={REDIRECT}"
+        )
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url) as resp:
@@ -74,6 +77,7 @@ class OAuth(View):
 
                 data = await resp.json()
                 access: str = data["access_token"]
+                refresh: str = data["refresh_token"]
 
             async with session.get(TWITCH_VALIDATE, headers={"Authorization": f"OAuth {access}"}) as resp:
                 if resp.status != 200:
@@ -83,8 +87,17 @@ class OAuth(View):
                 twitch_id: int = int(data["user_id"])
 
         try:
-            user = await self.app.database.refresh_or_create_user(twitch_id=twitch_id, state=state)
+            await self.app.database.refresh_or_create_user(twitch_id=twitch_id, state=state)
         except ValueError as e:
             return Response(f"Bad request: {e}", status_code=400)
 
-        return JSONResponse(user.as_dict(), status_code=200)
+        if twitch_id == int(config["TIME_SUBS"]["twitch_id"]):
+            with open(".secrets.json", "w+") as fp:
+                current: dict[str, str] = json.load(fp)
+
+                current["token"] = access
+                current["refresh"] = refresh
+
+                json.dump(current, fp=fp)
+
+        return Response("Success, you may close this window!", status_code=200)

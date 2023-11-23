@@ -48,6 +48,15 @@ class DiscordBot(commands.Bot):
         assert self.user
         logger.info(f"Logged into Discord as {self.user} | {self.user.id}")
 
+    async def setup_hook(self) -> None:
+        location = ("extensions/discord", "extensions.discord")
+        extensions: list[str] = [f"{location[1]}.{f.stem}" for f in pathlib.Path(location[0]).glob("*.py")]
+
+        for extension in extensions:
+            await self.load_extension(extension)
+
+        logger.info("Loaded extensions for Discord Bot.")
+
 
 class TwitchBot(tcommands.Bot):
     def __init__(self, *, dbot: DiscordBot, database: Database) -> None:
