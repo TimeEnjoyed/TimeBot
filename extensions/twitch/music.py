@@ -62,13 +62,10 @@ class Music(commands.Cog):
             return
 
         volume: int
+        value = value.replace(" ", "")
 
         try:
-            if value.startswith("-"):
-                value = value.lstrip("-")
-                volume = max(5, min(player.volume - int(value), 50))
-            elif value.startswith("+"):
-                value = value.lstrip("+")
+            if value.startswith(("-", "+")):
                 volume = max(5, min(player.volume + int(value), 50))
             else:
                 volume = max(5, min(int(value), 50))
