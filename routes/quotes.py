@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-
 class Quotes(View):
     def __init__(self, app: Server) -> None:
         self.app = app
@@ -55,7 +54,7 @@ class Quotes(View):
             "added_by": row["added_by"],
             "speaker": row["speaker"],
             "source": row["source"],
-            "created": row["created"].isoformat()
+            "created": row["created"].isoformat(),
         }
 
         return JSONResponse(data)
