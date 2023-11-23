@@ -115,10 +115,11 @@ class Music(commands.Cog):
             return
 
         if player.loaded == player.current:  # type: ignore
-            await ctx.reply(f"Currently playing {player.current}.")
+            await ctx.reply(f"Currently playing {player.current} by {player.current.author}.")  # type: ignore
 
         if player.current:
-            await ctx.reply(f"Currently playing {player.current} requested by @{player.current.twitch_user.name}")  # type: ignore
+            current: wavelink.Playable = player.current
+            await ctx.reply(f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name}")  # type: ignore
 
     @commands.command(aliases=["pause", "resume"])
     async def toggle(self, ctx: commands.Context) -> None:
