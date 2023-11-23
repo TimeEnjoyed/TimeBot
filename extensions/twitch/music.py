@@ -134,7 +134,7 @@ class Music(commands.Cog):
         if not player.loaded:  # type: ignore
             return
 
-        await player.pause(not player.pause)
+        await player.pause(not player.paused)
 
         if player.paused:
             await ctx.reply("Paused the player.")
