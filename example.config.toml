@@ -8,6 +8,7 @@ token = ""
 channels = ["timeenjoyed"]
 client_id = ""
 client_secret = ""
+eventsub_secret = ""
 
 [API]
 prefix = ""
@@ -19,3 +20,23 @@ dsn = "postgresql://USER:PASSWORD@localhost:5432/timeenjoyed"
 
 [GENERAL]
 stream_refs_id = 874734169622716437
+announcements_id = 862800502848749609
+announcements_webhook = ""
+
+[TIME_SUBS]
+events = ["stream.online", "channel.channel_points_custom_reward_redemption.add"]
+twitch_id = "410885037"
+online_role_id = 1167278797742157824
+scopes = []
+
+[BUNNIE_SUBS]
+events = ["stream.online"]
+twitch_id = "501667269"
+online_role_id = 1167299408459739216
+scopes = []
+
+[FAFFIN_SUBS]
+events = ["stream.online"]
+twitch_id = "136620872"
+online_role_id = 1167299591541104640
+scopes = []

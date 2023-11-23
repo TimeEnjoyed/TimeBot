@@ -26,6 +26,8 @@ class Twitch(TypedDict):
     channels: list[str]
     client_id: str
     client_secret: str
+    eventsub_secret: str
+    online_subscriptions: list[str]
 
 
 class Api(TypedDict):
@@ -40,6 +42,15 @@ class Database(TypedDict):
 
 class General(TypedDict):
     stream_refs_id: int
+    announcements_id: int
+    announcements_webhook: str
+
+
+class EventSubs(TypedDict):
+    events: list[str]
+    twitch_id: str
+    online_role_id: int
+    scopes: list[str]
 
 
 class Config(TypedDict):
@@ -48,3 +59,6 @@ class Config(TypedDict):
     API: Api
     DATABASE: Database
     GENERAL: General
+    TIME_SUBS: EventSubs
+    BUNNIE_SUBS: EventSubs
+    FAFFIN_SUBS: EventSubs
