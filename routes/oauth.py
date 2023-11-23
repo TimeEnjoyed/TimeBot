@@ -19,7 +19,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import aiohttp
-from starlette.responses import JSONResponse, Response
+from starlette.responses import Response
 
 from api import View, route
 from core import config
