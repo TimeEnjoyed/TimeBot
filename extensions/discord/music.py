@@ -119,6 +119,42 @@ class Music(commands.Cog):
     async def cog_load(self) -> None:
         self.session = aiohttp.ClientSession()
 
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload) -> None:
+        player: wavelink.Player | None = payload.player
+        if not player:
+            return
+
+        if player.autoplay is not wavelink.AutoPlayMode.disabled:
+            return
+
+        if player.loaded:  # type: ignore
+            try:
+                track: wavelink.Playable = player.queue.get()
+            except wavelink.QueueEmpty:
+                await player.play(player.loaded, replace=True)  # type: ignore
+            else:
+                await player.play(track)
+
+    @commands.Cog.listener()
+    async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
+        player: wavelink.Player | None = payload.player
+        if not player:
+            return
+
+        if player.loaded == player.current:  # type: ignore
+            return
+
+        elif player.loaded and payload.original:  # type: ignore
+            original: wavelink.Playable = payload.original
+
+            channel: twitchio.Channel = self.bot.tbot.get_channel("timeenjoyed")  # type: ignore
+            await channel.send(f"Now Playing: {payload.track} requested by @{original.twitch_user.name}")  # type: ignore
+            return
+
+        # At this point we are playing from Discord not Twitch...
+        ...
+
     async def refresh_token(self, refresh: str) -> str | None:
         client_id: str = core.config["TWITCH"]["client_id"]
         client_secret: str = core.config["TWITCH"]["client_secret"]
@@ -269,6 +305,53 @@ class Music(commands.Cog):
 
         player.loaded = None  # type: ignore
         await ctx.send(f"Connected: {player}")
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def stream_start(self, ctx: commands.Context, *, url: str) -> None:
+        """Start the stream player.
+
+        Parameters
+        ----------
+        url: str
+            The URL of the continuous song to play.
+        """
+        await ctx.defer()
+
+        player: wavelink.Player
+
+        try:
+            player = cast(wavelink.Player, ctx.voice_client)
+        except AttributeError:
+            pass
+        else:
+            if not player.loaded:  # type: ignore
+                await player.disconnect()
+
+        try:
+            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+            player.loaded = None  # type: ignore
+        except discord.ClientException:
+            await ctx.send("Please connect to a voice channel first!")
+            return
+
+        player.autoplay = wavelink.AutoPlayMode.disabled
+
+        tracks: wavelink.Search = await wavelink.Playable.search(url)
+        if not tracks:
+            await ctx.send("Unable to find a track with that URL.")
+            return
+
+        track: wavelink.Playable = tracks[0]
+
+        if player.current and player.current == player.loaded:  # type: ignore
+            await player.play(track, replace=True)
+            player.loaded = track  # type: ignore
+        else:
+            player.loaded = track  # type: ignore
+
+        await ctx.send("Successfully setup the stream player!")
 
 
 async def setup(bot: core.DiscordBot) -> None:
