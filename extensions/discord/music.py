@@ -94,7 +94,7 @@ class Music(commands.Cog):
 
         headers: dict[str, str] = {
             "Authorization": f"Bearer {json_['token']}",
-            "Client-Id": core.config["TWITCH"]["client_id"],
+            "Client-Id": json_["client_id"],
         }
 
         async with self.session.patch(url, json={"status": status}, headers=headers) as resp:
