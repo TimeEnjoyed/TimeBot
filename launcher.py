@@ -46,7 +46,7 @@ PAYLOAD: dict[str, Any] = {
 async def eventsub_subscribe() -> None:
     url = "https://api.twitch.tv/helix/eventsub/subscriptions"
     headers: dict[str, str] = {
-        "Authorization": f"Bearer {core.config['TWITCH']['token']}",
+        "Authorization": f"Bearer {core.config['TWITCH']['app_token']}",
         "Client-Id": core.config["TWITCH"]["client_id"],
     }
 
@@ -64,7 +64,7 @@ async def eventsub_subscribe() -> None:
 
     async with aiohttp.ClientSession() as session:
         for payload in payloads:
-            async with session.post(url, data=payload, headers=headers) as resp:
+            async with session.post(url, json=payload, headers=headers) as resp:
                 if resp.status >= 300:
                     logger.warning("EventSub subscription was not successful, status: %s", resp.status)
                     continue
