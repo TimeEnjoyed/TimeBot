@@ -48,7 +48,7 @@ class Music(commands.Cog):
         await ctx.reply("Skipped the song.")
 
     @commands.command(aliases=["vol"])
-    async def volume(self, ctx: commands.Context, *, value: int) -> None:
+    async def volume(self, ctx: commands.Context, *, value: str) -> None:
         if not ctx.author.is_mod:  # type: ignore
             return
 
@@ -61,7 +61,20 @@ class Music(commands.Cog):
         if not player.loaded:  # type: ignore
             return
 
-        volume: int = max(5, min(value, 50))
+        volume: int
+
+        try:
+            if value.startswith("-"):
+                value = value.lstrip("-")
+                volume = max(5, min(player.volume - int(value), 50))
+            elif value.startswith("+"):
+                value = value.lstrip("+")
+                volume = max(5, min(player.volume + int(value), 50))
+            else:
+                volume = max(5, min(int(value), 50))
+        except ValueError:
+            await ctx.reply("Invalid volume passed.")
+            return
 
         await player.set_volume(volume)
         await ctx.reply(f"Set the volume to {volume}")
