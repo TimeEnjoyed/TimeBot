@@ -106,16 +106,18 @@ class EventSub(View):
         return Response(status_code=204)
 
     async def notifcation_event(self, data: dict[str, Any], /) -> None:
-        subscription: str = data["type"]
+        subscription: dict[str, Any] = data["subscription"]
+        type_: str = subscription["type"]
+        event: dict[str, Any] = data["event"]
 
-        if subscription == "stream.online":
-            await self.online_event(data["broadcaster_user_login"], data["broadcaster_user_id"])
+        if type_ == "stream.online":
+            await self.online_event(event["broadcaster_user_login"], event["broadcaster_user_id"])
 
-        elif subscription == "channel.channel_points_custom_reward_redemption.add":
+        elif type_ == "channel.channel_points_custom_reward_redemption.add":
             await self.redeem_event(data)
 
         else:
-            logger.warning("EventSub received an unknown notification type: %s", subscription)
+            logger.warning("EventSub received an unknown notification type: %s", type_)
 
     async def online_event(self, stream: str, stream_id: str) -> None:
         async with aiohttp.ClientSession() as session:
