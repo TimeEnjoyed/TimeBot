@@ -23,6 +23,7 @@ dsn = "postgresql://USER:PASSWORD@localhost:5432/timeenjoyed"
 stream_refs_id = 874734169622716437
 announcements_id = 862800502848749609
 announcements_webhook = ""
+music_webhook = ""
 
 [TIME_SUBS]
 events = ["stream.online", "channel.channel_points_custom_reward_redemption.add"]

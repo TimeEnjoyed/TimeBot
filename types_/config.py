@@ -45,6 +45,7 @@ class General(TypedDict):
     stream_refs_id: int
     announcements_id: int
     announcements_webhook: str
+    music_webhook: str
 
 
 class EventSubs(TypedDict):
