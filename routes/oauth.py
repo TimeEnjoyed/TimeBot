@@ -85,6 +85,7 @@ class OAuth(View):
 
                 data = await resp.json()
                 twitch_id: int = int(data["user_id"])
+                client_id: str = data["client_id"]
 
         try:
             await self.app.database.refresh_or_create_user(twitch_id=twitch_id, state=state)
@@ -97,6 +98,7 @@ class OAuth(View):
 
                 current["token"] = access
                 current["refresh"] = refresh
+                current["client_id"] = client_id
 
                 fp.seek(0)
                 json.dump(current, fp=fp)
