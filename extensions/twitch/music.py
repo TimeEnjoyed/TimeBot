@@ -116,6 +116,7 @@ class Music(commands.Cog):
 
         if player.loaded == player.current:  # type: ignore
             await ctx.reply(f"Currently playing {player.current} by {player.current.author}.")  # type: ignore
+            return
 
         if player.current:
             current: wavelink.Playable = player.current
