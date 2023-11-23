@@ -320,14 +320,10 @@ class Music(commands.Cog):
         await ctx.defer()
 
         player: wavelink.Player
+        player = cast(wavelink.Player, ctx.voice_client)
 
-        try:
-            player = cast(wavelink.Player, ctx.voice_client)
-        except AttributeError:
-            pass
-        else:
-            if not player.loaded:  # type: ignore
-                await player.disconnect()
+        if player and not player.loaded:  # type: ignore
+            await player.disconnect()
 
         try:
             player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
