@@ -346,7 +346,7 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
 
         if not player.current or player.current == player.loaded:  # type: ignore
-            await player.play(track, replace=True)
+            await player.play(track, replace=True, volume=30)
 
         player.loaded = track  # type: ignore
         await ctx.send("Successfully setup the stream player!")
