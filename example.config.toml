@@ -5,6 +5,7 @@ token = ""
 [TWITCH]
 prefix = ""
 token = ""
+app_token = ""
 channels = ["timeenjoyed"]
 client_id = ""
 client_secret = ""
@@ -40,3 +41,7 @@ events = ["stream.online"]
 twitch_id = "136620872"
 online_role_id = 1167299591541104640
 scopes = []
+
+[WAVELINK]
+uri = "http://localhost:2333/connect"
+password = ""

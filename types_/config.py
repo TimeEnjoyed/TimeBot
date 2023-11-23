@@ -23,6 +23,7 @@ class Discord(TypedDict):
 class Twitch(TypedDict):
     prefix: str
     token: str
+    app_token: str
     channels: list[str]
     client_id: str
     client_secret: str
@@ -53,6 +54,11 @@ class EventSubs(TypedDict):
     scopes: list[str]
 
 
+class Wavelink(TypedDict):
+    uri: str
+    password: str
+    
+
 class Config(TypedDict):
     DISCORD: Discord
     TWITCH: Twitch
@@ -62,3 +68,4 @@ class Config(TypedDict):
     TIME_SUBS: EventSubs
     BUNNIE_SUBS: EventSubs
     FAFFIN_SUBS: EventSubs
+    WAVELINK: Wavelink
