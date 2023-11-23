@@ -101,6 +101,7 @@ class EventSub(View):
             return Response(status_code=204)
 
         if message_type == "notification":
+            logger.info("EventSub dispatching notification event.")
             _: asyncio.Task = asyncio.create_task(self.notifcation_event(data))
 
         return Response(status_code=204)
@@ -111,9 +112,11 @@ class EventSub(View):
         event: dict[str, Any] = data["event"]
 
         if type_ == "stream.online":
+            logger.info("EventSub Stream Online received.")
             await self.online_event(event["broadcaster_user_login"], event["broadcaster_user_id"])
 
         elif type_ == "channel.channel_points_custom_reward_redemption.add":
+            logger.info("EventSub Redemption received.")
             await self.redeem_event(data)
 
         else:
@@ -135,7 +138,7 @@ class EventSub(View):
             return
 
         reward: dict[str, Any] = event["reward"]
-        if reward["title"].lower() != "play this song":
+        if str(reward["title"]).lower().rstrip(" ") != "play this song":
             return
 
         self.app.tbot.run_event("api_request_song", event)
