@@ -12,8 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import logging
 from typing import Any, Literal, cast
+from urllib.parse import quote
 
 import aiohttp
 import discord
@@ -40,17 +42,68 @@ class Music(commands.Cog):
     async def cog_load(self) -> None:
         self.session = aiohttp.ClientSession()
 
+    async def refresh_token(self, refresh: str) -> str | None:
+        client_id: str = core.config["TWITCH"]["client_id"]
+        client_secret: str = core.config["TWITCH"]["client_secret"]
+
+        url = (
+            "https://id.twitch.tv/oauth2/token?"
+            "grant_type=refresh_token&"
+            f"refresh_token={quote(refresh)}&"
+            f"client_id={client_id}&"
+            f"client_secret={client_secret}"
+        )
+
+        async with self.session.post(url) as resp:
+            if resp.status != 200:
+                logger.warning("Unable to refresh token: %s", resp.status)
+                return None
+
+            data: dict[str, Any] = await resp.json()
+            access: str = data["access_token"]
+            new_refresh: str = data["refresh_token"]
+
+        with open(".secrets.json", "r+") as fp:
+            current: dict[str, str] = json.load(fp)
+
+            current["token"] = access
+            current["refresh"] = new_refresh
+
+            fp.seek(0)
+            json.dump(current, fp=fp)
+            fp.truncate()
+
+        logger.info("Refreshed token successfully.")
+        return new_refresh
+
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
         redeem_id: str = data["id"]
         reward_id: str = data["reward"]["id"]
         broadcaster_id: str = core.config["TIME_SUBS"]["twitch_id"]
 
-        url = f"https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?id={redeem_id}&broadcaster_id={broadcaster_id}&reward_id={reward_id}"
+        url = (
+            f"https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?"
+            f"id={redeem_id}&"
+            f"broadcaster_id={broadcaster_id}&"
+            f"reward_id={reward_id}"
+        )
 
-        async with self.session.patch(url, json={"status": status}) as resp:
+        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
+        with open(".secrets.json") as fp:
+            json_: dict[str, Any] = json.load(fp)
+
+        headers: dict[str, str] = {"Authorization": f"Bearer {json_['token']}"}
+        async with self.session.patch(url, json={"status": status}, headers=headers) as resp:
             if resp.status != 200:
                 logger.error("Failed to change redemption status: %s (Code: %s)", resp.reason, resp.status)
                 return
+
+            if resp.status == 401:
+                new: str | None = await self.refresh_token(json_["refresh"])
+                if not new:
+                    return
+
+                return await self.update_redemption(data=data, status=status)
 
             logger.info("Changed redemption status for <%s> to %s", redeem_id, status)
 
