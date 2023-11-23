@@ -57,7 +57,7 @@ class EventSubs(TypedDict):
 class Wavelink(TypedDict):
     uri: str
     password: str
-    
+
 
 class Config(TypedDict):
     DISCORD: Discord
