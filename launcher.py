@@ -14,22 +14,70 @@ limitations under the License.
 """
 import asyncio
 import logging
+from typing import Any
 
+import aiohttp
 import discord
 import uvicorn
 
 import api
 import core
 from database import Database
+from types_.config import EventSubs
+
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+USER_SUBS: list[EventSubs] = [core.config["TIME_SUBS"], core.config["BUNNIE_SUBS"], core.config["FAFFIN_SUBS"]]
+
+PAYLOAD: dict[str, Any] = {
+    "type": "...",
+    "version": "1",
+    "condition": {"broadcaster_user_id": "..."},
+    "transport": {
+        "method": "webhook",
+        "callback": f"{core.config['API']['public_host'].removesuffix('/')}/eventsub/callback",
+        "secret": core.config["TWITCH"]["eventsub_secret"],
+    },
+}
+
+
+async def eventsub_subscribe() -> None:
+    url = "https://api.twitch.tv/helix/eventsub/subscriptions"
+    headers: dict[str, str] = {
+        "Authorization": f"Bearer {core.config['TWITCH']['token']}",
+        "Client-Id": core.config["TWITCH"]["client_id"],
+    }
+
+    payloads: list[dict[str, Any]] = []
+
+    for user in USER_SUBS:
+        if not user["events"]:
+            continue
+
+        for sub in user["events"]:
+            payload: dict[str, Any] = PAYLOAD.copy()
+            payload["condition"]["broadcaster_user_id"] = user["twitch_id"]
+            payload["type"] = sub
+            payloads.append(payload)
+
+    async with aiohttp.ClientSession() as session:
+        for payload in payloads:
+            async with session.post(url, data=payload, headers=headers) as resp:
+                if resp.status >= 300:
+                    logger.warning("EventSub subscription was not successful, status: %s", resp.status)
+                    continue
+
+                logger.info(
+                    "Subscribed to EventSub: %s for %s", payload["type"], payload["condition"]["broadcaster_user_id"]
+                )
 
 
 async def main() -> None:
     discord.utils.setup_logging(level=logging.INFO)
 
     async with Database() as database, core.DiscordBot(database=database) as dbot:
-        # Init the API Server...
-        app: api.Server = api.Server(database=database)
-
         # Init and run the Twitch Bot in the background...
         tbot: core.TwitchBot = core.TwitchBot(dbot=dbot, database=database)
         dbot.tbot = tbot
@@ -38,9 +86,17 @@ async def main() -> None:
         # Init and run the Discord Bot in the background...
         _: asyncio.Task = asyncio.create_task(dbot.start(core.config["DISCORD"]["token"]))
 
+        # Init the API Server...
+        app: api.Server = api.Server(database=database, tbot=tbot)
+
         # Configure Uvicorn to run our API and keep the asyncio event loop running...
         config = uvicorn.Config(app, host="localhost", port=core.config["API"]["port"])
         server = uvicorn.Server(config)
+
+        # Subscribe to our EventSub subscriptions...
+        await eventsub_subscribe()
+
+        # Start the API server and keep asyncio event loop running...
         await server.serve()
 
 
