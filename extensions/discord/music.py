@@ -119,3 +119,7 @@ class Music(commands.Cog):
             return
 
         await ctx.send(f"Connected: {player}")
+
+
+async def setup(bot: core.DiscordBot) -> None:
+    await bot.add_cog(Music(bot))
