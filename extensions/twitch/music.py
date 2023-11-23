@@ -154,7 +154,7 @@ class Music(commands.Cog):
             return
 
         await ctx.reply(
-            f"Paused: {player.paused}, Volume: {player.volume}, Ping: {player.ping}, Current: {player.current}"
+            f"Paused: {player.paused}, Volume: {player.volume}, Ping: {player.ping}ms, Current: {player.current}"
         )
 
 
