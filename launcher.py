@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import asyncio
+import copy
 import logging
 from typing import Any
 
@@ -57,7 +58,7 @@ async def eventsub_subscribe() -> None:
             continue
 
         for sub in user["events"]:
-            payload: dict[str, Any] = PAYLOAD.copy()
+            payload: dict[str, Any] = copy.deepcopy(PAYLOAD)
             payload["condition"]["broadcaster_user_id"] = user["twitch_id"]
             payload["type"] = sub
             payloads.append(payload)
