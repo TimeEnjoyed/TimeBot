@@ -282,7 +282,7 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
         track.twitch_user = user  # type: ignore
 
-        if not elevated:
+        if elevated:
             if player.current == player.loaded:  # type: ignore
                 await player.play(track, replace=True)
             else:
