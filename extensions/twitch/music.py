@@ -120,7 +120,7 @@ class Music(commands.Cog):
         if player.current:
             await ctx.reply(f"Currently playing {player.current} requested by @{player.current.twitch_user.name}")  # type: ignore
 
-    @commands.command(aliases=["pasue", "resume"])
+    @commands.command(aliases=["pause", "resume"])
     async def toggle(self, ctx: commands.Context) -> None:
         if not ctx.author.is_mod:  # type: ignore
             return
