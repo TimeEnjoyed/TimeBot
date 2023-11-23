@@ -26,7 +26,7 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.is_owner()
+    @commands.has_guild_permissions(administrator=True)
     async def sync(
         self,
         ctx: commands.Context,
