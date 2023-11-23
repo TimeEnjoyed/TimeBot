@@ -35,10 +35,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Server(Application):
-    def __init__(self, *, database: Database) -> None:
+    def __init__(self, *, database: Database, tbot: core.TwitchBot) -> None:
         self.database = database
+        self.tbot = tbot
 
-        views: list[View] = [OAuthView(self), QuotesView(self)]
+        views: list[View] = [OAuthView(self), QuotesView(self), EventSubView(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
