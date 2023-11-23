@@ -128,11 +128,14 @@ class Music(commands.Cog):
         if player.autoplay is not wavelink.AutoPlayMode.disabled:
             return
 
+        if payload.reason == "replaced":
+            return
+
         if player.loaded:  # type: ignore
             try:
                 track: wavelink.Playable = player.queue.get()
             except wavelink.QueueEmpty:
-                await player.play(player.loaded, replace=True)  # type: ignore
+                await player.play(player.loaded)  # type: ignore
             else:
                 await player.play(track)
 
