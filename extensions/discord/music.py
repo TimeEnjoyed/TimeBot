@@ -341,7 +341,7 @@ class Music(commands.Cog):
 
         track: wavelink.Playable = tracks[0]
 
-        if player.current and player.current == player.loaded:  # type: ignore
+        if not player.current or player.current == player.loaded:  # type: ignore
             await player.play(track, replace=True)
             player.loaded = track  # type: ignore
         else:
