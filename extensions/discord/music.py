@@ -209,6 +209,9 @@ class Music(commands.Cog):
         return new_refresh
 
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
+        # Temp setting for testing purposes...
+        status = "CANCELED"
+
         redeem_id: str = data["id"]
         reward_id: str = data["reward"]["id"]
         broadcaster_id: str = core.config["TIME_SUBS"]["twitch_id"]
