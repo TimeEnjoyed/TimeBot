@@ -318,7 +318,9 @@ class Music(commands.Cog):
             )
             return await self.update_redemption(data=data, status="CANCELED")
 
-        track: wavelink.Playable = tracks[0]
+        track: wavelink.Playable
+        track = tracks[tracks.selected] if isinstance(tracks, wavelink.Playlist) else tracks[0]
+
         track.twitch_user = user  # type: ignore
 
         flags: list[str] = self.run_elevated_checks(track=track, player=player)
