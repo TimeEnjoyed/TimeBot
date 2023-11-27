@@ -32,6 +32,9 @@ import core
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+MAX_SONG_LEN: int = 360000  # 6 mins in Milliseconds...
+
+
 class RequestView(discord.ui.View):
     message: discord.Message | discord.WebhookMessage
 
@@ -51,12 +54,19 @@ class RequestView(discord.ui.View):
         self.track = track
         self.cog = cog
 
+        self.actioned: bool = False
+
     def _disable_all_buttons(self) -> None:
         for item in self.children:
             if isinstance(item, (discord.ui.Button, discord.ui.Select)):
                 item.disabled = True
 
     async def on_timeout(self) -> None:
+        if self.actioned:
+            return
+
+        self.actioned = True
+
         self._disable_all_buttons()
         await self.message.edit(view=self)
 
@@ -73,6 +83,11 @@ class RequestView(discord.ui.View):
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
     async def accept(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
+
+        if self.actioned:
+            return
+
+        self.actioned = True
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
@@ -93,6 +108,11 @@ class RequestView(discord.ui.View):
     async def accept_refund(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
 
+        if self.actioned:
+            return
+
+        self.actioned = True
+
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
 
@@ -111,6 +131,11 @@ class RequestView(discord.ui.View):
     @discord.ui.button(label="Deny and Refund", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
+
+        if self.actioned:
+            return
+
+        self.actioned = True
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator.")  # type: ignore
@@ -264,7 +289,7 @@ class Music(commands.Cog):
             logger.warning("An error occurred fetching the user with name: %s. Unable to add song.", user_login)
             return await self.update_redemption(data=data, status="CANCELED")
 
-        elevated: bool = False
+        elevated: bool | None = False  # True == Moderator, None == VIP/Subscriber, False == Regular Viewer...
         channel: twitchio.Channel | None = self.bot.tbot.get_channel("timeenjoyed")
         if not channel:
             logging.warning("Unable to fulfill request as channel is not in cache.")
@@ -273,10 +298,20 @@ class Music(commands.Cog):
         else:
             chatter: twitchio.Chatter | twitchio.PartialChatter | None = channel.get_chatter(user_login)
 
-            if chatter and (chatter.is_mod or chatter.is_subscriber or chatter.is_vip):  # type: ignore
+            if chatter and chatter.is_mod:  # type: ignore
                 elevated = True
 
-        tracks: wavelink.Search = await wavelink.Playable.search(user_input, source="ytmsearch")
+            elif chatter and (chatter.is_subscriber or chatter.is_vip):  # type: ignore
+                elevated = None
+
+        try:
+            tracks: wavelink.Search = await wavelink.Playable.search(user_input, source="ytmsearch")
+        except wavelink.LavalinkLoadException as e:
+            await channel.send(
+                f"@{user_login} I was unable to request this song: {e.error}. Your points were refunded."
+            )
+            return await self.update_redemption(data=data, status="CANCELED")
+
         if not tracks:
             await channel.send(
                 f"Sorry @{user_login} I was unable to find a song matching your request. I have refunded your points."
@@ -286,7 +321,9 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
         track.twitch_user = user  # type: ignore
 
-        if elevated:
+        flags: list[str] = self.run_elevated_checks(track=track, player=player)
+
+        if elevated or (elevated is None and not flags):
             if player.current == player.loaded:  # type: ignore
                 await player.play(track, replace=True)
             else:
@@ -306,10 +343,25 @@ class Music(commands.Cog):
         embed.add_field(name="URL/Link", value=f"[Track URL]({track.uri})")
         embed.add_field(name="Service", value=f"**`{track.source}`**")
         embed.add_field(name="Duration", value=f"**`{minutes} minutes, {seconds} seconds`**")
+
+        if flags:
+            embed.add_field(name="Flags", value="\n".join(f"**`{f}`**" for f in flags))
+
         embed.set_image(url=track.artwork)
 
         view: RequestView = RequestView(data=data, cog=self, player=player, track=track)
         view.message = await player.channel.send(embed=embed, view=view)
+
+    def run_elevated_checks(self, *, track: wavelink.Playable, player: wavelink.Player) -> list[str]:
+        flags: list[str] = []
+
+        if track.length > MAX_SONG_LEN:
+            flags.append("LONG TRACK DURATION")
+
+        if track in player.queue.history:  # type: ignore
+            flags.append("TRACK PREVIOUSLY REDEEMED")
+
+        return flags
 
     @commands.hybrid_command()
     @commands.guild_only()
