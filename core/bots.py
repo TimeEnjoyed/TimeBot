@@ -65,6 +65,12 @@ class DiscordBot(commands.Bot):
         node: wavelink.Node = payload.node
         logger.info("Wavelink successfully connected: %s. Resumed: %s", node.identifier, payload.resumed)
 
+    async def on_command_error(self, context: commands.Context, exception: commands.CommandError) -> None:
+        if isinstance(exception, commands.CommandNotFound):
+            return
+
+        logger.exception(exception)
+
 
 class TwitchBot(tcommands.Bot):
     def __init__(self, *, dbot: DiscordBot, database: Database) -> None:
@@ -88,3 +94,9 @@ class TwitchBot(tcommands.Bot):
 
             self.loaded = True
             logger.info("Loaded extensions for Twitch Bot.")
+
+    async def event_command_error(self, context: tcommands.Context, error: Exception) -> None:
+        if isinstance(error, tcommands.CommandNotFound):
+            return
+
+        logger.exception(error)
