@@ -136,6 +136,15 @@ class General(commands.Cog):
 
         await ctx.send(f'"{content}" - {user.name if user else "Unknown"}')
 
+    @commands.command()
+    async def http(self, ctx: commands.Context, *, code: str) -> None:
+        status = core.status_codes.get(code, None)
+        if not status:
+            await ctx.reply(f'I could not find a statues code for "{code}"')
+            return
+
+        await ctx.reply(f"{status['name']} - {status['description']}")
+
 
 def prepare(bot: core.TwitchBot) -> None:
     bot.add_cog(General(bot))

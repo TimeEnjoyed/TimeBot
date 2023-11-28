@@ -12,6 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from .bots import *
-from .config import config as config
-from .data import status_codes as status_codes
+from typing import TypedDict
+
+
+class StatusCodes(TypedDict):
+    name: str
+    description: str
+    url: str

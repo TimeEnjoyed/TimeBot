@@ -12,6 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from .bots import *
-from .config import config as config
-from .data import status_codes as status_codes
+from __future__ import annotations
+
+import json
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from types_.statuses import StatusCodes
+
+
+with open("status_codes.json") as fp:
+    status_codes: dict[str, StatusCodes] = json.load(fp)
