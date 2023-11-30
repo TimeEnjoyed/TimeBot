@@ -14,11 +14,15 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import json
 import logging
 import pathlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
+import aiohttp
 import discord
+import twitchio
 import wavelink
 from discord.ext import commands
 from twitchio.ext import commands as tcommands
@@ -82,6 +86,41 @@ class TwitchBot(tcommands.Bot):
 
         self.loaded: bool = False
 
+    async def refresh_token(self, refresh: str) -> str | None:
+        client_id: str = config["TWITCH"]["client_id"]
+        client_secret: str = config["TWITCH"]["client_secret"]
+
+        url = (
+            "https://id.twitch.tv/oauth2/token?"
+            "grant_type=refresh_token&"
+            f"refresh_token={quote(refresh)}&"
+            f"client_id={client_id}&"
+            f"client_secret={client_secret}"
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url) as resp:
+                if resp.status != 200:
+                    logger.warning("Unable to refresh token: %s", resp.status)
+                    return None
+
+                data: dict[str, Any] = await resp.json()
+                access: str = data["access_token"]
+                new_refresh: str = data["refresh_token"]
+
+        with open(".secrets.json", "r+") as fp:
+            current: dict[str, str] = json.load(fp)
+
+            current["token"] = access
+            current["refresh"] = new_refresh
+
+            fp.seek(0)
+            json.dump(current, fp=fp)
+            fp.truncate()
+
+        logger.info("Refreshed token successfully.")
+        return new_refresh
+
     async def event_ready(self) -> None:
         logger.info(f"Logged into Twitch IRC as {self.nick}")
 
@@ -100,3 +139,49 @@ class TwitchBot(tcommands.Bot):
             return
 
         logger.exception(error)
+
+    async def event_time_raid(self, from_id: str, viewers: int) -> None:
+        users: list[twitchio.User] = await self.fetch_users(names=["timeenjoyed"])
+        if not users:
+            logger.warning("Unable to fetch TimeEnjoyed for raid notifications.")
+            return
+
+        time: twitchio.User = users[0]
+        if not time.channel:
+            logger.warning("Unable to fetch TimeEnjoyed from channel cache for raid notifications.")
+            return
+
+        raider: twitchio.ChannelInfo = await self.fetch_channel(broadcaster=from_id)
+        if not raider:
+            logger.warning("Unable to fetch raider for raid notifications.")
+            return
+
+        await time.channel.send(
+            (
+                f"timeenWave @{raider.user.name} just raided with {viewers} viewers timeenHug"
+                f"they were streaming in {raider.game_name}!"
+            )
+        )
+
+        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
+        with open(".secrets.json") as fp:
+            json_: dict[str, Any] = json.load(fp)
+
+        try:
+            await time.shoutout(json_["token"], to_broadcaster_id=int(from_id), moderator_id=time.id)
+        except Exception:
+            new: str | None = await self.refresh_token(json_["refresh"])
+            if not new:
+                logger.warning("Failed to send raid shoutout as token could not be refreshed.")
+                return
+        else:
+            return
+
+        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
+        with open(".secrets.json") as fp:
+            json_: dict[str, Any] = json.load(fp)
+
+        try:
+            await time.shoutout(json_["token"], to_broadcaster_id=int(from_id), moderator_id=time.id)
+        except Exception as e:
+            logger.exception(e)
