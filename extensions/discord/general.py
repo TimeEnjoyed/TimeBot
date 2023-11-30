@@ -48,7 +48,7 @@ class General(commands.Cog):
         )
 
         if interaction.user == interaction.guild.owner:  # type: ignore
-            url += "&scope=channel%3Aread%3Aredemptions+channel%3Amanage%3Aredemptions"
+            url += "&scope=channel%3Aread%3Aredemptions+channel%3Amanage%3Aredemptions+moderator%3Amanage%3Ashoutouts"
         else:
             url += "&scope="
 
