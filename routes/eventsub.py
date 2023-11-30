@@ -119,6 +119,10 @@ class EventSub(View):
             logger.info("EventSub Redemption received.")
             await self.redeem_event(data)
 
+        elif type_ == "channel.raid":
+            logger.info("EventSub Raid received.")
+            await self.raid_event(event["from_broadcaster_user_id"], event["viewers"])
+
         else:
             logger.warning("EventSub received an unknown notification type: %s", type_)
 
@@ -143,3 +147,6 @@ class EventSub(View):
 
         self.app.tbot.run_event("api_request_song", event)
         logger.info("EventSub dispatched event for <Play this song> to <api_request_song>.")
+
+    async def raid_event(self, from_id: str, viewers: int) -> None:
+        self.app.tbot.run_event("time_raid", from_id, viewers)
