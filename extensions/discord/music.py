@@ -16,14 +16,12 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Literal, Optional, cast
-from urllib.parse import quote
+from typing import Any, Literal, cast
 
 import aiohttp
 import discord
 import twitchio
 import wavelink
-from discord import app_commands
 from discord.ext import commands
 
 import core
@@ -199,40 +197,6 @@ class Music(commands.Cog):
         # At this point we are playing from Discord not Twitch...
         ...
 
-    async def refresh_token(self, refresh: str) -> str | None:
-        client_id: str = core.config["TWITCH"]["client_id"]
-        client_secret: str = core.config["TWITCH"]["client_secret"]
-
-        url = (
-            "https://id.twitch.tv/oauth2/token?"
-            "grant_type=refresh_token&"
-            f"refresh_token={quote(refresh)}&"
-            f"client_id={client_id}&"
-            f"client_secret={client_secret}"
-        )
-
-        async with self.session.post(url) as resp:
-            if resp.status != 200:
-                logger.warning("Unable to refresh token: %s", resp.status)
-                return None
-
-            data: dict[str, Any] = await resp.json()
-            access: str = data["access_token"]
-            new_refresh: str = data["refresh_token"]
-
-        with open(".secrets.json", "r+") as fp:
-            current: dict[str, str] = json.load(fp)
-
-            current["token"] = access
-            current["refresh"] = new_refresh
-
-            fp.seek(0)
-            json.dump(current, fp=fp)
-            fp.truncate()
-
-        logger.info("Refreshed token successfully.")
-        return new_refresh
-
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
         # Temp setting for testing purposes...
         status = "CANCELED"
@@ -259,7 +223,7 @@ class Music(commands.Cog):
 
         async with self.session.patch(url, json={"status": status}, headers=headers) as resp:
             if resp.status == 401:
-                new: str | None = await self.refresh_token(json_["refresh"])
+                new: str | None = await self.bot.tbot.refresh_token(json_["refresh"])
                 if not new:
                     return
 
