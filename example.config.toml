@@ -26,7 +26,7 @@ announcements_webhook = ""
 music_webhook = ""
 
 [TIME_SUBS]
-events = ["stream.online", "channel.channel_points_custom_reward_redemption.add"]
+events = ["stream.online", "channel.channel_points_custom_reward_redemption.add", "channel.raid"]
 twitch_id = "410885037"
 online_role_id = 1167278797742157824
 scopes = []
