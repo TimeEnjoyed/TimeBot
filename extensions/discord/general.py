@@ -30,6 +30,15 @@ class General(commands.Cog):
     def __init__(self, bot: core.DiscordBot) -> None:
         self.bot = bot
 
+    async def cog_app_command_error(
+        self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError
+    ) -> None:
+        if isinstance(error, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(
+                f"You are on cooldown, try again in {error.retry_after} seconds.", ephemeral=True
+            )
+            return
+
     @app_commands.command(name="link")
     @app_commands.checks.cooldown(1, 600)
     @app_commands.guild_only()
