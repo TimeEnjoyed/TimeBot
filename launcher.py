@@ -59,7 +59,12 @@ async def eventsub_subscribe() -> None:
 
         for sub in user["events"]:
             payload: dict[str, Any] = copy.deepcopy(PAYLOAD)
-            payload["condition"]["broadcaster_user_id"] = user["twitch_id"]
+
+            if sub == "channel.raid":
+                payload["condition"] = {"to_broadcaster_user_id": user["twitch_id"]}
+            else:
+                payload["condition"]["broadcaster_user_id"] = user["twitch_id"]
+
             payload["type"] = sub
             payloads.append(payload)
 
