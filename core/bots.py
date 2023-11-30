@@ -140,6 +140,26 @@ class TwitchBot(tcommands.Bot):
 
         logger.exception(error)
 
+    async def send_shoutout(self, payload: dict[str, str]) -> None:
+        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
+        with open(".secrets.json") as fp:
+            json_: dict[str, Any] = json.load(fp)
+
+        headers: dict[str, str] = {
+            "Authorization": f"Bearer {json_['token']}",
+            "Client-Id": json_["client_id"],
+        }
+
+        url: str = "https://api.twitch.tv/helix/chat/shoutouts"
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=url, json=payload, headers=headers) as resp:
+                if resp.status == 401:
+                    new: str | None = await self.refresh_token(json_["refresh"])
+                    if new:
+                        return await self.send_shoutout(payload=payload)
+                elif resp.status >= 300:
+                    logger.warning("Unable to send shoutout: %s", resp.status)
+
     async def event_time_raid(self, from_id: str, viewers: int) -> None:
         users: list[twitchio.User] = await self.fetch_users(names=["timeenjoyed"])
         if not users:
@@ -158,30 +178,14 @@ class TwitchBot(tcommands.Bot):
 
         await time.channel.send(
             (
-                f"timeenWave @{raider.user.name} just raided with {viewers} viewers timeenHug"
+                f"timeenWave @{raider.user.name} just raided with {viewers} viewers timeenHug "
                 f"they were streaming in {raider.game_name}!"
             )
         )
 
-        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
-        with open(".secrets.json") as fp:
-            json_: dict[str, Any] = json.load(fp)
-
-        try:
-            await time.shoutout(json_["token"], to_broadcaster_id=int(from_id), moderator_id=time.id)
-        except Exception:
-            new: str | None = await self.refresh_token(json_["refresh"])
-            if not new:
-                logger.warning("Failed to send raid shoutout as token could not be refreshed.")
-                return
-        else:
-            return
-
-        # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
-        with open(".secrets.json") as fp:
-            json_: dict[str, Any] = json.load(fp)
-
-        try:
-            await time.shoutout(json_["token"], to_broadcaster_id=int(from_id), moderator_id=time.id)
-        except Exception as e:
-            logger.exception(e)
+        payload: dict[str, str] = {
+            "from_broadcaster_id": str(time.id),
+            "to_broadcaster_id": str(from_id),
+            "moderator_id": str(time.id),
+        }
+        await self.send_shoutout(payload=payload)
