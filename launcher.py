@@ -75,9 +75,7 @@ async def eventsub_subscribe() -> None:
                     logger.warning("EventSub subscription was not successful, status: %s", resp.status)
                     continue
 
-                logger.info(
-                    "Subscribed to EventSub: %s for %s", payload["type"], payload["condition"]["broadcaster_user_id"]
-                )
+                logger.info("Subscribed to EventSub: %s for %s", payload["type"], payload["condition"])
 
 
 async def main() -> None:
