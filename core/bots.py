@@ -140,7 +140,7 @@ class TwitchBot(tcommands.Bot):
 
         logger.exception(error)
 
-    async def send_shoutout(self, payload: dict[str, str]) -> None:
+    async def send_shoutout(self, payload: dict[str, str], refreshed: bool = False) -> None:
         # This kinda sucks, but due to the fact this can change when linking accounts, we need to re open the JSON...
         with open(".secrets.json") as fp:
             json_: dict[str, Any] = json.load(fp)
@@ -154,9 +154,14 @@ class TwitchBot(tcommands.Bot):
         async with aiohttp.ClientSession() as session:
             async with session.post(url=url, json=payload, headers=headers) as resp:
                 if resp.status == 401:
+                    if refreshed:
+                        logger.warning("Unable to send shoutout due to missing scopes.")
+                        return
+
                     new: str | None = await self.refresh_token(json_["refresh"])
                     if new:
-                        return await self.send_shoutout(payload=payload)
+                        return await self.send_shoutout(payload=payload, refreshed=True)
+
                 elif resp.status >= 300:
                     logger.warning("Unable to send shoutout: %s", resp.status)
 
