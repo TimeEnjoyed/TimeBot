@@ -145,6 +145,10 @@ class General(commands.Cog):
 
         await ctx.reply(f"{status['name']} - {status['description']}")
 
+    @commands.command()
+    async def keyboard2(self, ctx: commands.Context) -> None:
+        await ctx.reply("Logitech MX Mechanical Mini Wireless Illuminated Keyboard, Clicky Switches")
+
 
 def prepare(bot: core.TwitchBot) -> None:
     bot.add_cog(General(bot))
