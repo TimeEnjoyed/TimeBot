@@ -136,7 +136,12 @@ class RequestView(discord.ui.View):
         self.actioned = True
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
-        await channel.send(f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator.")  # type: ignore
+        await channel.send(
+            (
+                f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator."  # type: ignore
+                "Your points were refunded."
+            )
+        )
 
         await self.cog.update_redemption(data=self.data, status="CANCELED")
 
@@ -199,7 +204,7 @@ class Music(commands.Cog):
 
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
         # Temp setting for testing purposes...
-        status = "CANCELED"
+        # status = "CANCELED"
 
         redeem_id: str = data["id"]
         reward_id: str = data["reward"]["id"]
