@@ -31,18 +31,6 @@ twitch_id = "410885037"
 online_role_id = 1167278797742157824
 scopes = []
 
-[BUNNIE_SUBS]
-events = ["stream.online"]
-twitch_id = "501667269"
-online_role_id = 1167299408459739216
-scopes = []
-
-[FAFFIN_SUBS]
-events = ["stream.online"]
-twitch_id = "136620872"
-online_role_id = 1167299591541104640
-scopes = []
-
 [WAVELINK]
 uri = "http://localhost:2333/connect"
 password = ""
