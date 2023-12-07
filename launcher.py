@@ -30,7 +30,7 @@ from types_.config import EventSubs
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-USER_SUBS: list[EventSubs] = [core.config["TIME_SUBS"], core.config["BUNNIE_SUBS"], core.config["FAFFIN_SUBS"]]
+USER_SUBS: list[EventSubs] = [core.config["TIME_SUBS"]]
 
 PAYLOAD: dict[str, Any] = {
     "type": "...",

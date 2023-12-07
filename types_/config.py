@@ -67,6 +67,4 @@ class Config(TypedDict):
     DATABASE: Database
     GENERAL: General
     TIME_SUBS: EventSubs
-    BUNNIE_SUBS: EventSubs
-    FAFFIN_SUBS: EventSubs
     WAVELINK: Wavelink
