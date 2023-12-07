@@ -14,6 +14,7 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import pathlib
@@ -36,6 +37,10 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+LIVE_ROLE_ID: int = 1182206699969458226
+SUBBED_ROLE_ID: int = 873044115279990836
+
+
 class DiscordBot(commands.Bot):
     tbot: TwitchBot
 
@@ -47,11 +52,41 @@ class DiscordBot(commands.Bot):
         intents.members = True
         intents.presences = True
 
+        self.loaded: bool = False
+
         super().__init__(intents=intents, command_prefix=config["DISCORD"]["prefix"])
 
     async def on_ready(self) -> None:
+        if self.loaded:
+            return
+
+        self.loaded = True
+
         assert self.user
         logger.info(f"Logged into Discord as {self.user} | {self.user.id}")
+
+        guild: discord.Guild = self.get_guild(859565527343955998)  # type: ignore
+        role: discord.Role = guild.get_role(LIVE_ROLE_ID)  # type: ignore
+        subbed: discord.Role = guild.get_role(SUBBED_ROLE_ID)  # type: ignore
+
+        for member in guild.members:
+            if subbed not in member.roles:
+                continue
+
+            streaming = False
+
+            for activity in member.activities:
+                if isinstance(activity, discord.Streaming) and str(activity.platform).lower() == "twitch":
+                    streaming = True
+
+            if streaming and role not in member.roles:
+                await member.add_roles(role)
+                await asyncio.sleep(1)
+            elif not streaming and role in member.roles:
+                await member.remove_roles(role)
+                await asyncio.sleep(1)
+
+        logger.info("Finished updating roles in on_ready event.")
 
     async def setup_hook(self) -> None:
         node: wavelink.Node = wavelink.Node(uri=config["WAVELINK"]["uri"], password=config["WAVELINK"]["password"])
@@ -74,6 +109,36 @@ class DiscordBot(commands.Bot):
             return
 
         logger.exception(exception)
+
+    async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:
+        if before.guild.id != 859565527343955998:
+            return
+
+        subbed: discord.Role | None = after.guild.get_role(SUBBED_ROLE_ID)
+        if subbed not in after.roles:
+            return
+
+        bstream: discord.Streaming | None = None
+        astream: discord.Streaming | None = None
+
+        for activity in before.activities:
+            if isinstance(activity, discord.Streaming) and str(activity.platform).lower() == "twitch":
+                bstream = activity
+
+        for activity in after.activities:
+            if isinstance(activity, discord.Streaming) and str(activity.platform).lower() == "twitch":
+                astream = activity
+
+        if bstream is not None and astream is not None:
+            return
+
+        role: discord.Role = before.guild.get_role(LIVE_ROLE_ID)  # type: ignore
+
+        if not bstream and role not in before.roles:
+            await before.add_roles(role, reason="Started streaming on Twitch")
+
+        if not astream and role in after.roles:
+            await after.remove_roles(role, reason="Stopped streaming on Twitch")
 
 
 class TwitchBot(tcommands.Bot):
