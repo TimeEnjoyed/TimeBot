@@ -43,8 +43,6 @@ SECRET: str = core.config["TWITCH"]["eventsub_secret"]
 MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
 USER_ROLES: dict[str, int] = {
     core.config["TIME_SUBS"]["twitch_id"]: core.config["TIME_SUBS"]["online_role_id"],
-    core.config["BUNNIE_SUBS"]["twitch_id"]: core.config["BUNNIE_SUBS"]["online_role_id"],
-    core.config["FAFFIN_SUBS"]["twitch_id"]: core.config["FAFFIN_SUBS"]["online_role_id"],
 }
 
 
