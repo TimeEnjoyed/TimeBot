@@ -134,10 +134,10 @@ class DiscordBot(commands.Bot):
 
         role: discord.Role = before.guild.get_role(LIVE_ROLE_ID)  # type: ignore
 
-        if not bstream and role not in before.roles:
+        if not bstream and astream and role not in before.roles:
             await before.add_roles(role, reason="Started streaming on Twitch")
 
-        if not astream and role in after.roles:
+        elif not astream and bstream and role in after.roles:
             await after.remove_roles(role, reason="Stopped streaming on Twitch")
 
 
