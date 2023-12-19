@@ -129,8 +129,15 @@ class Music(commands.Cog):
             return
 
         if player.current:
+            if not player.current.is_stream:
+                time_ = f"{self.ms_to_hr(player.position)}/{self.ms_to_hr(player.current.length)}"
+            elif player.current.is_stream:
+                time_ = "Live Stream"
+
             current: wavelink.Playable = player.current
-            await ctx.reply(f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name}")  # type: ignore
+            await ctx.reply(
+                f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name} [{time_}]" # type: ignore
+            )
 
     @commands.command(aliases=["pause", "resume"])
     async def toggle(self, ctx: commands.Context) -> None:
