@@ -153,6 +153,13 @@ class Music(commands.Cog):
         else:
             await ctx.reply("Resumed the player.")
 
+    def ms_to_hr(self, milli: int) -> str:
+        seconds: int = milli // 1000
+        _, secs = divmod(seconds, 60)
+        hours, mins = divmod(_, 60)
+
+        return f"{hours}:{mins:02}:{secs:02}"
+
     @commands.command()
     async def player(self, ctx: commands.Context) -> None:
         if not ctx.author.is_mod:  # type: ignore
@@ -165,8 +172,23 @@ class Music(commands.Cog):
             await ctx.reply("There currently is no player connected.")
             return
 
+        current: wavelink.Playable | None = player.current
+        time_: str | None = None
+
+        if current and not current.is_stream:
+            time_ = f"{self.ms_to_hr(player.position)}/{self.ms_to_hr(current.length)}"
+        elif current and current.is_stream:
+            time_ = "Live Stream"
+
         await ctx.reply(
-            f"Paused: {player.paused}, Volume: {player.volume}, Ping: {player.ping}ms, Current: {player.current}"
+            (
+                f"Paused: {player.paused}, "
+                f"Volume: {player.volume}, "
+                f"Ping: {player.ping}ms, "
+                f"Current: {current}, "
+                f"Position: {time_}, "
+                f"Requester: {current.twitch_user.name}"  # type: ignore
+            )
         )
 
 
