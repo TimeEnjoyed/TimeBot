@@ -180,6 +180,11 @@ class Music(commands.Cog):
         elif current and current.is_stream:
             time_ = "Live Stream"
 
+        try:
+            requester: str = current.twitch_user.name  # type: ignore
+        except AttributeError:
+            requester: str = "Unknown"
+
         await ctx.reply(
             (
                 f"Paused: {player.paused}, "
@@ -187,7 +192,7 @@ class Music(commands.Cog):
                 f"Ping: {player.ping}ms, "
                 f"Current: {current}, "
                 f"Position: {time_}, "
-                f"Requester: {current.twitch_user.name}"  # type: ignore
+                f"Requester: {requester}"
             )
         )
 
