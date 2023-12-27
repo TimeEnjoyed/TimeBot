@@ -136,7 +136,7 @@ class Music(commands.Cog):
 
             current: wavelink.Playable = player.current
             await ctx.reply(
-                f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name} [{time_}]" # type: ignore
+                f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name} [{time_}]"  # type: ignore
             )
 
     @commands.command(aliases=["pause", "resume"])
