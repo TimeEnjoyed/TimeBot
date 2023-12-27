@@ -65,6 +65,9 @@ class DiscordBot(commands.Bot):
         assert self.user
         logger.info(f"Logged into Discord as {self.user} | {self.user.id}")
 
+        if config["DEBUG"]["enabled"] is True:
+            return
+
         guild: discord.Guild = self.get_guild(859565527343955998)  # type: ignore
         role: discord.Role = guild.get_role(LIVE_ROLE_ID)  # type: ignore
         subbed: discord.Role = guild.get_role(SUBBED_ROLE_ID)  # type: ignore
@@ -111,6 +114,9 @@ class DiscordBot(commands.Bot):
         logger.exception(exception)
 
     async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:
+        if config["DEBUG"]["enabled"] is True:
+            return
+
         if before.guild.id != 859565527343955998:
             return
 

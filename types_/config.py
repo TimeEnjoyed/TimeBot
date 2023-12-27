@@ -60,6 +60,10 @@ class Wavelink(TypedDict):
     password: str
 
 
+class Debug(TypedDict):
+    enabled: bool
+
+
 class Config(TypedDict):
     DISCORD: Discord
     TWITCH: Twitch
@@ -68,3 +72,4 @@ class Config(TypedDict):
     GENERAL: General
     TIME_SUBS: EventSubs
     WAVELINK: Wavelink
+    DEBUG: Debug

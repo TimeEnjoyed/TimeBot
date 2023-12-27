@@ -35,9 +35,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Server(Application):
-    def __init__(self, *, database: Database, tbot: core.TwitchBot) -> None:
+    def __init__(self, *, database: Database, tbot: core.TwitchBot, dbot: core.DiscordBot) -> None:
         self.database = database
         self.tbot = tbot
+        self.dbot = dbot
 
         views: list[View] = [OAuthView(self), QuotesView(self), EventSubView(self)]
         middleware: list[Middleware] = [

@@ -91,7 +91,7 @@ async def main() -> None:
         _: asyncio.Task = asyncio.create_task(dbot.start(core.config["DISCORD"]["token"]))
 
         # Init the API Server...
-        app: api.Server = api.Server(database=database, tbot=tbot)
+        app: api.Server = api.Server(database=database, tbot=tbot, dbot=dbot)
 
         # Configure Uvicorn to run our API and keep the asyncio event loop running...
         config = uvicorn.Config(app, host="localhost", port=core.config["API"]["port"])

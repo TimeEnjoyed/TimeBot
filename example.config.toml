@@ -34,3 +34,6 @@ scopes = []
 [WAVELINK]
 uri = "http://localhost:2333/connect"
 password = ""
+
+[DEBUG]
+enabled = false
