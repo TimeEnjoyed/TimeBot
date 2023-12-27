@@ -37,6 +37,7 @@ ignore = [
     "G004",
     "TCH002",
     "SIM117",
+    "RUF006",
 ]
 exclude = [
     ".bzr",
