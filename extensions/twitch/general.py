@@ -149,6 +149,15 @@ class General(commands.Cog):
     async def keyboard2(self, ctx: commands.Context) -> None:
         await ctx.reply("Logitech MX Mechanical Mini Wireless Illuminated Keyboard, Clicky Switches")
 
+    @commands.command()
+    async def count(self, ctx: commands.Context, mbti_type: str) -> None:
+        data: dict[str, int] = self.bot.dbot.mbti_count()
+        total: int | None = data.get(mbti_type.upper())
+        if total is None:
+            await ctx.reply(f"There are no {mbti_type} types in the server!")
+            return
+        await ctx.reply(f"There are {total} {mbti_type} types in the server!")
+
 
 def prepare(bot: core.TwitchBot) -> None:
     bot.add_cog(General(bot))

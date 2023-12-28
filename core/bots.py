@@ -40,6 +40,25 @@ logger: logging.Logger = logging.getLogger(__name__)
 LIVE_ROLE_ID: int = 1182206699969458226
 SUBBED_ROLE_ID: int = 873044115279990836
 
+MBTI_TYPES: list[str] = [
+    "ESTP",
+    "ESTJ",
+    "ESFP",
+    "ESFJ",
+    "ISTP",
+    "ISTJ",
+    "ISFP",
+    "ISFJ",
+    "ENFJ",
+    "ENTP",
+    "ENFP",
+    "ENTJ",
+    "INTP",
+    "INFJ",
+    "INTJ",
+    "INFP",
+]
+
 
 class DiscordBot(commands.Bot):
     tbot: TwitchBot
@@ -145,6 +164,16 @@ class DiscordBot(commands.Bot):
 
         elif not astream and bstream and role in after.roles:
             await after.remove_roles(role, reason="Stopped streaming on Twitch")
+
+    def mbti_count(self) -> dict[str, int]:
+        guild: discord.Guild = self.get_guild(859565527343955998)
+        roles: list[discord.Role] = guild.roles
+        mbti_dict: dict[str, int] = dict.fromkeys(MBTI_TYPES, 0)
+        for role in roles:
+            if role.name in mbti_dict.keys():
+                member_count = len(role.members)
+                mbti_dict[role.name] = member_count
+        return mbti_dict
 
 
 class TwitchBot(tcommands.Bot):

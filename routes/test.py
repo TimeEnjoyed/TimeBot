@@ -30,13 +30,31 @@ if TYPE_CHECKING:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-MBTI_TYPES: list[str] = ["ESTP","ESTJ","ESFP","ESFJ","ISTP","ISTJ","ISFP","ISFJ","ENFJ","ENTP","ENFP","ENTJ","INTP","INFJ","INTJ","INFP"]
+MBTI_TYPES: list[str] = [
+    "ESTP",
+    "ESTJ",
+    "ESFP",
+    "ESFJ",
+    "ISTP",
+    "ISTJ",
+    "ISFP",
+    "ISFJ",
+    "ENFJ",
+    "ENTP",
+    "ENFP",
+    "ENTJ",
+    "INTP",
+    "INFJ",
+    "INTJ",
+    "INFP",
+]
 print(len(MBTI_TYPES))
+
 
 class Test(View):
     def __init__(self, app: Server) -> None:
         self.app = app
-        
+
     @route("/test", methods=["GET"])
     async def test_route(self, request: Request) -> Response:
         return Response(self.app.dbot.user.name, status_code=200)  # shows "TimeBot Test-Dec2023" in browser
@@ -49,48 +67,33 @@ class Test(View):
 
     @route("/roles", methods=["GET"])
     async def get_role(self, request: Request) -> Response:
-        guild: discord.Guild = self.app.dbot.get_guild(859565527343955998)
-        roles = guild.roles
-        mbti_dict = dict.fromkeys(MBTI_TYPES, 0)
-        # iterate through roles.
-        for role in roles:
-            if role.name in mbti_dict.keys():
-                member_count = len(role.members)
-                mbti_dict[role.name] += member_count
-                # get members of the role, aka "ESTP"
-                # first get identifier of the role (id?)
-                
-        
-        # { 'isfp': 9, 'esfp': 2 }
-        return JSONResponse(mbti_dict, status_code=200)
-    
+        counts: dict[str, int] = self.app.dbot.mbti_count()
+        return JSONResponse(counts, status_code=200)
+
     @route("/recursive", methods=["GET"])
     async def get_recursive(self, request: Request) -> Response:
         channel = self.app.tbot.get_channel("timeenjoyed")
         await channel.send("Hello from the API!")
 
         return Response(status_code=204)
-    
+
     @route("/recursive_dbot", methods=["GET"])
     async def get_recursive_dbot(self, request: Request) -> Response:
-      guild: discord.Guild = self.app.dbot.get_guild(859565527343955998)
-      channel = guild.get_channel(1077565710391316561)
-      await channel.send("Hello xD")
-      return Response(status_code=204)
-    
+        guild: discord.Guild = self.app.dbot.get_guild(859565527343955998)
+        channel = guild.get_channel(1077565710391316561)
+        await channel.send("Hello xD")
+        return Response(status_code=204)
+
     @route("/discord_embed_test", methods=["GET"])
     async def discord_embed_test(self, request: Request) -> Response:
-      guild: discord.Guild = self.app.dbot.get_guild(859565527343955998)
-      channel = guild.get_channel(1077565710391316561)
+        guild: discord.Guild = self.app.dbot.get_guild(859565527343955998)
+        channel = guild.get_channel(1077565710391316561)
 
-      embed = discord.Embed(colour=0xFFC0CB, title="This is an embed")
-      embed.description = "Hello from API rofl"
-      embed.set_image(url="https://t4.ftcdn.net/jpg/05/51/22/65/360_F_551226555_JoynWcUCPb7U68psjX0PnNG51WF4to2E.jpg")
-      await channel.send("test", embed=embed)
-      return Response(status_code=204)
-    
-
-
+        embed = discord.Embed(colour=0xFFC0CB, title="This is an embed")
+        embed.description = "Hello from API rofl"
+        embed.set_image(url="https://t4.ftcdn.net/jpg/05/51/22/65/360_F_551226555_JoynWcUCPb7U68psjX0PnNG51WF4to2E.jpg")
+        await channel.send("test", embed=embed)
+        return Response(status_code=204)
 
 
 # GUILDS are objects
