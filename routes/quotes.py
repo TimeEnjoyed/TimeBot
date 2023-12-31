@@ -15,6 +15,8 @@ limitations under the License.
 from __future__ import annotations
 
 import logging
+
+# from starlette.authentication import requires // for locking endpoints etc
 from typing import TYPE_CHECKING, Any
 
 from starlette.responses import JSONResponse, Response
@@ -36,6 +38,7 @@ class Quotes(View):
         self.app = app
 
     @route("/{id}", methods=["GET"])
+    # @requires("moderator")
     async def fetch_quote(self, request: Request) -> Response:
         path: str = request.path_params.get("id", "")
 

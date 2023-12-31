@@ -15,7 +15,7 @@ limitations under the License.
 import asyncpg
 import discord
 import twitchio
-from twitchio.ext import commands
+from twitchio.ext import commands, routines
 
 import core
 
@@ -26,6 +26,7 @@ STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
 class General(commands.Cog):
     def __init__(self, bot: core.TwitchBot) -> None:
         self.bot = bot
+        self.midnight.start("PST")
 
     @commands.command(aliases=["ref"])  # type: ignore
     async def streamref(self, ctx: commands.Context) -> None:
@@ -157,6 +158,12 @@ class General(commands.Cog):
             await ctx.reply(f"There are no {mbti_type} types in the server!")
             return
         await ctx.reply(f"There are {total} {mbti_type} types in the server!")
+
+    @routines.routine(seconds=10)
+    async def midnight(self, timezone: str) -> None:
+        channel = self.bot.get_channel("timeenjoyed")  # this is channel object
+        print(f"it's midnight in {timezone}!")
+        await channel.send(f"it's midnight in {timezone}!")
 
 
 def prepare(bot: core.TwitchBot) -> None:
