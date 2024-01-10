@@ -160,15 +160,18 @@ class General(commands.Cog):
     async def count(self, ctx: commands.Context, mbti_type: str) -> None:
         data: dict[str, int] = self.bot.dbot.mbti_count()
         total: int | None = data.get(mbti_type.upper())
+
         if total is None:
             await ctx.reply(f"There are no {mbti_type} types in the server!")
             return
+
         await ctx.reply(f"There are {total} {mbti_type} types in the server!")
 
     @routines.routine(seconds=1)
     async def midnight(self) -> None:
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
         assert channel is not None
+
         for timezone in TIMEZONES:
             tz = zoneinfo.ZoneInfo(timezone)
             current = datetime.now(tz)
