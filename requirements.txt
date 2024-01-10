@@ -6,4 +6,3 @@ asyncpg-stubs>=0.29.1
 uvicorn>=0.24.0
 wavelink>=3.0.0
 aiohttp>=3.7.4,<4
-loguru==0.7.2
