@@ -29,7 +29,7 @@ from discord.ext import commands
 from twitchio.ext import commands as tcommands
 
 from .config import config
-
+from .constants import MBTI_TYPES
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -42,25 +42,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 LIVE_ROLE_ID: int = 1182206699969458226
 SUBBED_ROLE_ID: int = 873044115279990836
-
-MBTI_TYPES: list[str] = [
-    "ESTP",
-    "ESTJ",
-    "ESFP",
-    "ESFJ",
-    "ISTP",
-    "ISTJ",
-    "ISFP",
-    "ISFJ",
-    "ENFJ",
-    "ENTP",
-    "ENFP",
-    "ENTJ",
-    "INTP",
-    "INFJ",
-    "INTJ",
-    "INFP",
-]
 
 
 class DiscordBot(commands.Bot):
