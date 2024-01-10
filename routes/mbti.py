@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 
 # from starlette.authentication import requires // for locking endpoints etc
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from starlette.responses import JSONResponse, Response
 
@@ -29,35 +29,14 @@ if TYPE_CHECKING:
 
     from api import Server
 
-
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class Quotes(View):
+class Mbti(View):
     def __init__(self, app: Server) -> None:
         self.app = app
 
-    @route("/{id}", methods=["GET"])
-    # @requires("moderator")
-    async def fetch_quote(self, request: Request) -> Response:
-        path: str = request.path_params.get("id", "")
-
-        try:
-            identifier: int = int(path)
-        except ValueError:
-            return Response("Bad quote ID.", status_code=400)
-
-        row = await self.app.database.fetch_quote(identifier)
-        if not row:
-            return Response(f'Quote with id "{identifier}" was not found or may have been removed.', status_code=404)
-
-        data: dict[str, Any] = {
-            "id": identifier,
-            "content": row["content"],
-            "added_by": row["added_by"],
-            "speaker": row["speaker"],
-            "source": row["source"],
-            "created": row["created"].isoformat(),
-        }
-
-        return JSONResponse(data)
+    @route("/roles", methods=["GET"])
+    async def get_role(self, request: Request) -> Response:
+        counts: dict[str, int] = self.app.dbot.mbti_count()
+        return JSONResponse(counts, status_code=200)

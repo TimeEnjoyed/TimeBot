@@ -22,5 +22,5 @@ if TYPE_CHECKING:
     from types_.config import Config
 
 
-with open("config.toml", "rb") as fp:
+with open(".config.toml", "rb") as fp:
     config: Config = tomllib.load(fp)  # type: ignore

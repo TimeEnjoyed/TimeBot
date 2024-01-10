@@ -18,7 +18,7 @@ import asyncio
 import json
 import logging
 import pathlib
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import aiohttp
@@ -29,9 +29,13 @@ from discord.ext import commands
 from twitchio.ext import commands as tcommands
 
 from .config import config
+from .constants import MBTI_TYPES
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Any
+
     from database import Database
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -145,6 +149,20 @@ class DiscordBot(commands.Bot):
 
         elif not astream and bstream and role in after.roles:
             await after.remove_roles(role, reason="Stopped streaming on Twitch")
+
+    def mbti_count(self) -> dict[str, int]:
+        guild: discord.Guild | None = self.get_guild(859565527343955998)
+        assert guild is not None
+
+        roles: Sequence[discord.Role] = guild.roles
+        mbti_dict: dict[str, int] = dict.fromkeys(MBTI_TYPES, 0)
+
+        for role in roles:
+            if role.name in mbti_dict:
+                member_count = len(role.members)
+                mbti_dict[role.name] = member_count
+
+        return mbti_dict
 
 
 class TwitchBot(tcommands.Bot):

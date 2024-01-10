@@ -12,6 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+# __init__.py allows core to be treated like a pacakge
 from .bots import *
 from .config import config as config
+from .constants import *
 from .data import status_codes as status_codes

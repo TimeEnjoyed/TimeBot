@@ -164,6 +164,7 @@ cython_debug/
 
 # Config Files
 config.toml
+.config.toml
 .secrets.json
 
 # VSC

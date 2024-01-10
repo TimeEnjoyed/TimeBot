@@ -12,30 +12,37 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+import logging
+import zoneinfo
+from datetime import datetime
+
 import asyncpg
 import discord
 import twitchio
-from twitchio.ext import commands
+from twitchio.ext import commands, routines
 
 import core
+from core.constants import TIMEZONES
 
 
 STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class General(commands.Cog):
     def __init__(self, bot: core.TwitchBot) -> None:
         self.bot = bot
+        self.midnight.start()
 
     @commands.command(aliases=["ref"])  # type: ignore
     async def streamref(self, ctx: commands.Context) -> None:
         """Add a stream reference to the Discord channel via Twitch.
-
         Use this command when replying to a message.
         """
         if not ctx.author.is_mod:  # type: ignore
             return
-
         message: twitchio.Message = ctx.message
 
         reply: str | None = message.tags.get("reply-parent-msg-body", None)
@@ -148,6 +155,31 @@ class General(commands.Cog):
     @commands.command()
     async def keyboard2(self, ctx: commands.Context) -> None:
         await ctx.reply("Logitech MX Mechanical Mini Wireless Illuminated Keyboard, Clicky Switches")
+
+    @commands.command()
+    async def count(self, ctx: commands.Context, mbti_type: str) -> None:
+        data: dict[str, int] = self.bot.dbot.mbti_count()
+        total: int | None = data.get(mbti_type.upper())
+
+        if total is None:
+            await ctx.reply(f"There are no {mbti_type} types in the server!")
+            return
+
+        await ctx.reply(f"There are {total} {mbti_type} types in the server!")
+
+    @routines.routine(seconds=1)
+    async def midnight(self) -> None:
+        channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
+        assert channel is not None
+
+        for timezone in TIMEZONES:
+            tz = zoneinfo.ZoneInfo(timezone)
+            current = datetime.now(tz)
+
+            if current.hour == 23 and current.minute == 47 and current.second == 0:
+                logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
+
+                await channel.send(f"it's midnight in {timezone}!")
 
 
 def prepare(bot: core.TwitchBot) -> None:
