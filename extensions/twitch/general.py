@@ -175,8 +175,10 @@ class General(commands.Cog):
         for timezone in TIMEZONES:
             tz = zoneinfo.ZoneInfo(timezone)
             current = datetime.now(tz)
+
             if current.hour == 23 and current.minute == 47 and current.second == 0:
-                logger.info(f"it is {current} in {tz}")
+                logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
+
                 await channel.send(f"it's midnight in {timezone}!")
 
 

@@ -31,6 +31,7 @@ from twitchio.ext import commands as tcommands
 from .config import config
 from .constants import MBTI_TYPES
 
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any

@@ -16,5 +16,5 @@ limitations under the License.
 # __init__.py allows core to be treated like a pacakge
 from .bots import *
 from .config import config as config
-from .data import status_codes as status_codes
 from .constants import *
+from .data import status_codes as status_codes
