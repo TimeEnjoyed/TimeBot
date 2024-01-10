@@ -44,8 +44,8 @@ class Server(Application):
             OAuthView(self),
             QuotesView(self),
             EventSubView(self),
-            TestView(self),
-        ]  # TODO: Add MbtiView(self)
+            MbtiView(self),
+        ]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),

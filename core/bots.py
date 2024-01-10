@@ -18,7 +18,7 @@ import asyncio
 import json
 import logging
 import pathlib
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import aiohttp
@@ -32,6 +32,9 @@ from .config import config
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Any
+
     from database import Database
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -166,11 +169,12 @@ class DiscordBot(commands.Bot):
             await after.remove_roles(role, reason="Stopped streaming on Twitch")
 
     def mbti_count(self) -> dict[str, int]:
-        guild: discord.Guild = self.get_guild(859565527343955998)
-        roles: list[discord.Role] = guild.roles
+        guild: discord.Guild | None = self.get_guild(859565527343955998)
+        assert guild is not None
+        roles: Sequence[discord.Role] = guild.roles
         mbti_dict: dict[str, int] = dict.fromkeys(MBTI_TYPES, 0)
         for role in roles:
-            if role.name in mbti_dict.keys():
+            if role.name in mbti_dict:
                 member_count = len(role.members)
                 mbti_dict[role.name] = member_count
         return mbti_dict
