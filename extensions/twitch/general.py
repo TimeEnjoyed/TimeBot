@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 import zoneinfo
 from datetime import datetime
 
 import asyncpg
 import discord
 import twitchio
-from loguru import logger
 from twitchio.ext import commands, routines
 
 import core
@@ -27,7 +27,7 @@ import core
 
 STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
 
-logger.add("my_log_file.log", format="{time} {level} {message}", level="DEBUG")
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class General(commands.Cog):
