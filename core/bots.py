@@ -152,12 +152,15 @@ class DiscordBot(commands.Bot):
     def mbti_count(self) -> dict[str, int]:
         guild: discord.Guild | None = self.get_guild(859565527343955998)
         assert guild is not None
+
         roles: Sequence[discord.Role] = guild.roles
         mbti_dict: dict[str, int] = dict.fromkeys(MBTI_TYPES, 0)
+
         for role in roles:
             if role.name in mbti_dict:
                 member_count = len(role.members)
                 mbti_dict[role.name] = member_count
+
         return mbti_dict
 
 
