@@ -23,6 +23,7 @@ import twitchio
 from twitchio.ext import commands, routines
 
 import core
+from core.constants import TIMEZONES
 
 
 STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
@@ -34,19 +35,6 @@ class General(commands.Cog):
     def __init__(self, bot: core.TwitchBot) -> None:
         self.bot = bot
         self.midnight.start()
-        self.timezones = [
-            "US/Pacific",
-            "US/Eastern",
-            "Australia/Melbourne",
-            "Australia/Brisbane",
-            "Africa/Johannesburg",
-            "Europe/Helsinki",
-            "Europe/London",
-            "Japan",
-            "Asia/Jakarta",
-            "Brazil/East",
-            "Asia/Kolkata",
-        ]
 
     @commands.command(aliases=["ref"])  # type: ignore
     async def streamref(self, ctx: commands.Context) -> None:
@@ -181,7 +169,7 @@ class General(commands.Cog):
     async def midnight(self) -> None:
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
         assert channel is not None
-        for timezone in self.timezones:
+        for timezone in TIMEZONES:
             tz = zoneinfo.ZoneInfo(timezone)
             current = datetime.now(tz)
             if current.hour == 23 and current.minute == 47 and current.second == 0:

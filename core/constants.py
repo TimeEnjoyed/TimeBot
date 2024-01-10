@@ -1,4 +1,4 @@
-__all__ = ("MBTI_TYPES", )
+__all__ = ("MBTI_TYPES", "TIMEZONES")
 
 
 MBTI_TYPES: list[str] = [
@@ -18,4 +18,18 @@ MBTI_TYPES: list[str] = [
     "INFJ",
     "INTJ",
     "INFP",
+]
+
+TIMEZONES: list[str] = [
+    "US/Pacific",
+    "US/Eastern",
+    "Australia/Melbourne",
+    "Australia/Brisbane",
+    "Africa/Johannesburg",
+    "Europe/Helsinki",
+    "Europe/London",
+    "Japan",
+    "Asia/Jakarta",
+    "Brazil/East",
+    "Asia/Kolkata",
 ]
