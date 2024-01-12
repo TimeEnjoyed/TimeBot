@@ -395,6 +395,7 @@ class Music(commands.Cog):
 
         try:
             player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+            await player.set_volume(30)
         except discord.ClientException:
             player = cast(wavelink.Player, ctx.voice_client)
         except AttributeError:
