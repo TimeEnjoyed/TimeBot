@@ -508,6 +508,31 @@ class Music(commands.Cog):
 
         await player.skip(force=True)
 
+    @commands.hybrid_command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def nightcore(self, ctx: commands.Context) -> None:
+        player: wavelink.Player = cast(wavelink.Player, ctx.voice_client)
+        if not player:
+            return
+
+        filters: wavelink.Filters = wavelink.Filters()
+        filters.timescale.set(pitch=1.2, speed=1.2, rate=1)
+
+        await player.set_filters(filters)
+        await ctx.message.add_reaction("\u2705")
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def no_filter(self, ctx: commands.Context) -> None:
+        player: wavelink.Player = cast(wavelink.Player, ctx.voice_client)
+        if not player:
+            return
+
+        await player.set_filters()
+        await ctx.message.add_reaction("\u2705")
+
 
 async def setup(bot: core.DiscordBot) -> None:
     await bot.add_cog(Music(bot))
