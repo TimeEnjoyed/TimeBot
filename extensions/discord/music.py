@@ -70,7 +70,6 @@ class RequestView(discord.ui.View):
 
         channel: twitchio.Channel = self.cog.bot.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was automatically accepted.")  # type: ignore
-
         if self.player.current == self.player.loaded:  # type: ignore
             await self.player.play(self.track, replace=True)
         else:
@@ -175,7 +174,8 @@ class Music(commands.Cog):
         if payload.reason == "replaced":
             return
 
-        if player.loaded:  # type: ignore
+        loaded: wavelink.Playable | None = getattr(player, "loaded", None)
+        if loaded:  # type: ignore
             try:
                 track: wavelink.Playable = player.queue.get()
             except wavelink.QueueEmpty:
@@ -189,10 +189,11 @@ class Music(commands.Cog):
         if not player:
             return
 
-        if player.loaded == player.current:  # type: ignore
+        loaded: wavelink.Playable | None = getattr(player, "loaded", None)
+        if loaded and loaded == player.current:  # type: ignore
             return
 
-        elif player.loaded and payload.original:  # type: ignore
+        elif loaded and payload.original:  # type: ignore
             original: wavelink.Playable = payload.original
 
             channel: twitchio.Channel = self.bot.tbot.get_channel("timeenjoyed")  # type: ignore
@@ -246,6 +247,12 @@ class Music(commands.Cog):
             player: wavelink.Player = cast(wavelink.Player, self.bot.voice_clients[0])
         except IndexError:
             logger.warning("Unable to fulfill song request as the player is not connected.")
+            return
+
+        loaded: wavelink.Playable | None = getattr(player, "loaded", None)
+        if not loaded:
+            logger.warning("Unable to fulfill song request as the player is not currently loaded.")
+            await self.update_redemption(data=data, status="CANCELED")
             return
 
         # user_id: str = data["user_id"]
@@ -349,8 +356,7 @@ class Music(commands.Cog):
 
         player: wavelink.Player
         player = cast(wavelink.Player, ctx.voice_client)
-
-        if player and not player.loaded:  # type: ignore
+        if player and not hasattr(player, "loaded"):
             await player.disconnect()
             player = None  # type: ignore
 
@@ -376,6 +382,49 @@ class Music(commands.Cog):
 
         player.loaded = track  # type: ignore
         await ctx.send("Successfully setup the stream player!")
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    async def play(self, ctx: commands.Context, *, query: str) -> None:
+        """Play a song with the given query."""
+        player: wavelink.Player
+
+        if ctx.voice_client and hasattr(ctx.voice_client, "loaded"):
+            await ctx.reply("I am unable to play songs currently as I am being used in stream!")
+            return
+
+        try:
+            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+        except discord.ClientException:
+            player = cast(wavelink.Player, ctx.voice_client)
+        except AttributeError:
+            await ctx.send("Please join a voice channel first.")
+            return
+
+        if player.channel != ctx.channel:
+            await ctx.send(f"Please request songs in {player.channel.mention}...")
+            return
+
+        player.autoplay = wavelink.AutoPlayMode.enabled
+
+        tracks: wavelink.Search = await wavelink.Playable.search(query, source="spsearch:")
+        if not tracks:
+            await ctx.reply("Could not find any tracks with that query. Please try again.")
+            return
+
+        track: wavelink.Playable = tracks[0]
+        track.extras = {"requester_id": ctx.author.id}
+
+        await player.queue.put_wait(track)
+        await ctx.reply(f"Added **`{track}`** to the queue.")
+
+        if not player.playing:
+            await player.play(player.queue.get())
+
+        try:
+            await ctx.message.delete()
+        except discord.HTTPException:
+            pass
 
     @commands.hybrid_command(aliases=["dc", "stop"])
     @commands.guild_only()
@@ -441,6 +490,22 @@ class Music(commands.Cog):
             await ctx.reply("Paused the player.")
         else:
             await ctx.reply("Resumed the player.")
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(kick_members=True)
+    async def skip(self, ctx: commands.Context) -> None:
+        """Skips the currently playing track."""
+        await ctx.defer()
+
+        player: wavelink.Player
+        player = cast(wavelink.Player, ctx.voice_client)
+
+        if not player:
+            await ctx.reply("I am not currently connected.")
+            return
+
+        await player.skip(force=True)
 
 
 async def setup(bot: core.DiscordBot) -> None:
