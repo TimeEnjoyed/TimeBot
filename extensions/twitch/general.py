@@ -167,19 +167,22 @@ class General(commands.Cog):
 
         await ctx.reply(f"There are {total} {mbti_type} types in the server!")
 
-    @routines.routine(seconds=1)
+    @routines.routine(seconds=60)
     async def midnight(self) -> None:
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
         assert channel is not None
 
         for timezone in TIMEZONES:
-            tz = zoneinfo.ZoneInfo(timezone)
-            current = datetime.now(tz)
+            tz: zoneinfo.ZoneInfo = zoneinfo.ZoneInfo(timezone)
+            current: datetime = datetime.now(tz)
+            logger.info(current)
 
-            if current.hour == 23 and current.minute == 47 and current.second == 0:
+            day_str: str = core.format_day(date=current.day, superscript=True)
+
+            if current.hour == 0 and current.minute == 0:
                 logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
 
-                await channel.send(f"it's midnight in {timezone}!")
+                await channel.send(f"it's midnight, the {day_str} in {timezone}!")
 
 
 def prepare(bot: core.TwitchBot) -> None:

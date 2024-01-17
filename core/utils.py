@@ -12,10 +12,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import datetime
 
-# __init__.py allows core to be treated like a pacakge
-from .bots import *
-from .config import config as config
-from .constants import *
-from .data import status_codes as status_codes
-from .utils import *
+
+__all__ = ("format_day",)
+
+ORDINALS: dict[int, str] = {1: "st", 2: "nd", 3: "rd", 4: "th"}
+SUPERSCRIPT_TABLE = str.maketrans("".join(ORDINALS.values()), "\u02E2\u1D57\u207F\u1D48\u02B3\u1D48\u1D57\u02B0")
+
+
+def format_day(date: datetime.datetime | int, *, superscript: bool = False) -> str:
+    day_int: int = date if isinstance(date, int) else date.day
+    ordinal: str = ORDINALS.get(day_int % 10, "th") if day_int not in (11, 12, 13) else "th"
+
+    day: str = f"{day_int}{ordinal}"
+    if superscript:
+        return day.translate(SUPERSCRIPT_TABLE)
+
+    return day
