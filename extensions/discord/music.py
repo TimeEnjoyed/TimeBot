@@ -382,8 +382,10 @@ class Music(commands.Cog):
 
         if not player.current or player.current == player.loaded:  # type: ignore
             if player.autoplay is wavelink.AutoPlayMode.enabled:
-                player.queue.put(track)
-                await player.play(player.queue.get(), replace=True, volume=20)
+                logger.info("Starting Stream player with AutoPlay Enabled.")
+                
+                await player.queue.put_wait(track)
+                await player.play(player.queue.get(), volume=20)
             else:
                 await player.play(track, replace=True, volume=20)
 
