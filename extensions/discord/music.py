@@ -196,6 +196,9 @@ class Music(commands.Cog):
         elif loaded and payload.original:  # type: ignore
             original: wavelink.Playable = payload.original
 
+            if not hasattr(original, "twitch_user"):
+                return
+
             channel: twitchio.Channel = self.bot.tbot.get_channel("timeenjoyed")  # type: ignore
             await channel.send(f"Now Playing: {payload.track} requested by @{original.twitch_user.name}")  # type: ignore
             return
@@ -378,7 +381,11 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
 
         if not player.current or player.current == player.loaded:  # type: ignore
-            await player.play(track, replace=True, volume=15)
+            if player.autoplay is wavelink.AutoPlayMode.enabled:
+                player.queue.put(track)
+                await player.play(player.queue.get(), replace=True, volume=20)
+            else:
+                await player.play(track, replace=True, volume=20)
 
         player.loaded = track  # type: ignore
         await ctx.send("Successfully setup the stream player!")
