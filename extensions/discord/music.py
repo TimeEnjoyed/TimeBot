@@ -368,7 +368,7 @@ class Music(commands.Cog):
                 await ctx.send("Please connect to a voice channel first!")
                 return
 
-        player.autoplay = wavelink.AutoPlayMode.disabled
+        player.autoplay = wavelink.AutoPlayMode.enabled
 
         tracks: wavelink.Search = await wavelink.Playable.search(url)
         if not tracks:
