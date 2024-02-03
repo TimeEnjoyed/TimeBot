@@ -371,7 +371,7 @@ class Music(commands.Cog):
                 await ctx.send("Please connect to a voice channel first!")
                 return
 
-        player.autoplay = wavelink.AutoPlayMode.disabled
+        player.autoplay = wavelink.AutoPlayMode.enabled
 
         tracks: wavelink.Search = await wavelink.Playable.search(url)
         if not tracks:
@@ -381,7 +381,13 @@ class Music(commands.Cog):
         track: wavelink.Playable = tracks[0]
 
         if not player.current or player.current == player.loaded:  # type: ignore
-            await player.play(track, replace=True, volume=15)
+            if player.autoplay is wavelink.AutoPlayMode.enabled:
+                logger.info("Starting Stream player with AutoPlay Enabled.")
+
+                await player.queue.put_wait(track)
+                await player.play(player.queue.get(), volume=20)
+            else:
+                await player.play(track, replace=True, volume=20)
 
         player.loaded = track  # type: ignore
         await ctx.send("Successfully setup the stream player!")
