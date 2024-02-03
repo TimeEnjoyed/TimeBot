@@ -209,7 +209,8 @@ class Music(commands.Cog):
                 f"Current: {current}, "
                 f"Position: {time_}, "
                 f"Requester: {requester}, "
-                f"AutoPlay: {player.autoplay}, "
+                f"AutoPlay: {player.autoplay.name}, "
+                f"Queue: {len(player.queue)}, "
                 f"AutoQueue: {len(player.auto_queue)} "
             )
         )
