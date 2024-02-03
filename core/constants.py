@@ -1,4 +1,7 @@
-__all__ = ("MBTI_TYPES", "TIMEZONES")
+from .config import config
+
+
+__all__ = ("MBTI_TYPES", "TIMEZONES", "TIME_GUILD")
 
 
 MBTI_TYPES: list[str] = [
@@ -20,6 +23,7 @@ MBTI_TYPES: list[str] = [
     "INFP",
 ]
 
+
 TIMEZONES: list[str] = [
     "US/Pacific",
     "US/Eastern",
@@ -33,3 +37,6 @@ TIMEZONES: list[str] = [
     "Brazil/East",
     "Asia/Kolkata",
 ]
+
+
+TIME_GUILD: int = config["GENERAL"]["guild_id"]

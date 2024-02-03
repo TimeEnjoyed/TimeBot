@@ -45,6 +45,7 @@ class Server(Application):
             QuotesView(self),
             EventSubView(self),
             MbtiView(self),
+            PlayerView(self),
         ]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
