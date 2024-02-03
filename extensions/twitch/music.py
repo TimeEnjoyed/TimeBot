@@ -33,7 +33,7 @@ class Music(commands.Cog):
             return
 
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             return
@@ -53,7 +53,7 @@ class Music(commands.Cog):
             return
 
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             return
@@ -82,7 +82,7 @@ class Music(commands.Cog):
             return
 
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             return
@@ -108,15 +108,19 @@ class Music(commands.Cog):
             url: str = core.config["GENERAL"]["music_webhook"]
             webhook: discord.Webhook = discord.Webhook.from_url(url=url, session=session)
 
-            requester: twitchio.User = current.twitch_user  # type: ignore
-            await webhook.send(content=msg, avatar_url=requester.profile_image, username=requester.display_name)
+            requester: twitchio.User | None = getattr(current, "twitch_user", None)
+
+            if requester:
+                await webhook.send(content=msg, avatar_url=requester.profile_image, username=requester.display_name)
+            else:
+                await webhook.send(content=msg, username="Bot AutoPlay")
 
         await ctx.reply("Sent this song to discord!")
 
     @commands.command(aliases=["nowplaying", "current", "currentsong", "song"])
     async def playing(self, ctx: commands.Context) -> None:
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             return
@@ -135,8 +139,12 @@ class Music(commands.Cog):
                 time_ = "Live Stream"
 
             current: wavelink.Playable = player.current
+
+            requester: twitchio.User | None = getattr(current, "twitch_user", None)
+            requested: str = f"@{requester.name}" if requester else "Bot AutoPlay"
+
             await ctx.reply(
-                f"Currently playing {current} by {current.author} requested by @{current.twitch_user.name} [{time_}]"  # type: ignore
+                f"Currently playing {current} by {current.author} requested by: {requested} [{time_}]"  # type: ignore
             )
 
     @commands.command(aliases=["pause", "resume"])
@@ -145,7 +153,7 @@ class Music(commands.Cog):
             return
 
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             return
@@ -173,7 +181,7 @@ class Music(commands.Cog):
             return
 
         player: wavelink.Player | None
-        player = wavelink.Pool.get_node().get_player(859565527343955998)
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
 
         if not player:
             await ctx.reply("There currently is no player connected.")
@@ -194,12 +202,15 @@ class Music(commands.Cog):
 
         await ctx.reply(
             (
+                f"Playing?: {player.playing}, "
                 f"Paused: {player.paused}, "
                 f"Volume: {player.volume}, "
                 f"Ping: {player.ping}ms, "
                 f"Current: {current}, "
                 f"Position: {time_}, "
-                f"Requester: {requester}"
+                f"Requester: {requester}, "
+                f"AutoPlay: {player.autoplay}, "
+                f"AutoQueue: {len(player.auto_queue)} "
             )
         )
 

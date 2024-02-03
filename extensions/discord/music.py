@@ -196,8 +196,11 @@ class Music(commands.Cog):
         elif loaded and payload.original:  # type: ignore
             original: wavelink.Playable = payload.original
 
+            requester: twitchio.User | None = getattr(original, "twitch_user", None)
+            requested: str = f"@{requester.name}" if requester else "Bot AutoPlay"
+
             channel: twitchio.Channel = self.bot.tbot.get_channel("timeenjoyed")  # type: ignore
-            await channel.send(f"Now Playing: {payload.track} requested by @{original.twitch_user.name}")  # type: ignore
+            await channel.send(f"Now Playing: {payload.track} requested by: {requested}")  # type: ignore
             return
 
         # At this point we are playing from Discord not Twitch...
