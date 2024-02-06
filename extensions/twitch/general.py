@@ -12,10 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-<<<<<<< HEAD
-
-=======
->>>>>>> 4eda7d009d739f8eea747fb455abfb033707340a
 import logging
 import zoneinfo
 from datetime import datetime
