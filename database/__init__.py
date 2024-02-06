@@ -61,8 +61,17 @@ class Database:
 
         return code
 
-    async def fetch_user(self, token: str) -> None:
-        ...
+    async def fetch_user(self, token: str) -> UserModel | None:
+        assert self.pool
+
+        query: str = """SELECT * FROM users WHERE token = $1"""
+        async with self.pool.acquire() as connection:
+            row = await connection.fetchrow(query, token)
+
+        if not row:
+            return None
+
+        return UserModel(record=row)
 
     async def refresh_or_create_user(self, *, twitch_id: int, state: str) -> UserModel:
         assert self.pool

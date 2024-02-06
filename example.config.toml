@@ -24,6 +24,7 @@ stream_refs_id = 874734169622716437
 announcements_id = 862800502848749609
 announcements_webhook = ""
 music_webhook = ""
+guild_id = 859565527343955998
 
 [TIME_SUBS]
 events = ["stream.online", "channel.channel_points_custom_reward_redemption.add", "channel.raid"]

@@ -46,6 +46,7 @@ class General(TypedDict):
     announcements_id: int
     announcements_webhook: str
     music_webhook: str
+    guild_id: int
 
 
 class EventSubs(TypedDict):
