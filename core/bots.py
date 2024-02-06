@@ -29,7 +29,7 @@ from discord.ext import commands
 from twitchio.ext import commands as tcommands
 
 from .config import config
-from .constants import MBTI_TYPES
+from .constants import MBTI_TYPES, TIME_GUILD
 
 
 if TYPE_CHECKING:
@@ -72,7 +72,7 @@ class DiscordBot(commands.Bot):
         if config["DEBUG"]["enabled"] is True:
             return
 
-        guild: discord.Guild = self.get_guild(859565527343955998)  # type: ignore
+        guild: discord.Guild = self.get_guild(TIME_GUILD)  # type: ignore
         role: discord.Role = guild.get_role(LIVE_ROLE_ID)  # type: ignore
         subbed: discord.Role = guild.get_role(SUBBED_ROLE_ID)  # type: ignore
 
@@ -121,7 +121,7 @@ class DiscordBot(commands.Bot):
         if config["DEBUG"]["enabled"] is True:
             return
 
-        if before.guild.id != 859565527343955998:
+        if before.guild.id != TIME_GUILD:
             return
 
         subbed: discord.Role | None = after.guild.get_role(SUBBED_ROLE_ID)
@@ -151,7 +151,7 @@ class DiscordBot(commands.Bot):
             await after.remove_roles(role, reason="Stopped streaming on Twitch")
 
     def mbti_count(self) -> dict[str, int]:
-        guild: discord.Guild | None = self.get_guild(859565527343955998)
+        guild: discord.Guild | None = self.get_guild(TIME_GUILD)
         assert guild is not None
 
         roles: Sequence[discord.Role] = guild.roles

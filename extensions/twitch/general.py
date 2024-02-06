@@ -12,7 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4eda7d009d739f8eea747fb455abfb033707340a
 import logging
 import zoneinfo
 from datetime import datetime
@@ -133,7 +136,7 @@ class General(commands.Cog):
 
         user: twitchio.User | discord.User | discord.Member | None = None
         if quote["source"] == "discord":
-            guild: discord.Guild = self.bot.dbot.get_guild(859565527343955998)  # type: ignore
+            guild: discord.Guild = self.bot.dbot.get_guild(core.TIME_GUILD)  # type: ignore
             user = guild.get_member(quote["speaker"]) or await self.bot.dbot.fetch_user(quote["speaker"])
         else:
             try:
