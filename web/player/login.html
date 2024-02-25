@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>TimeBot - Music Dashboard</title>
+
+    <!-- PACKAGES -->
+    <script src="/static/packages/htmx.min.js"></script>
+    <!-- SCRIPTS -->
+    <!-- STYLES -->
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body>
+    <div class="loginContainer">
+
+        <div>
+            <h2>Login</h2>
+            <span>Please login to continue...</span>
+        </div>
+
+        <div class="loginRow">
+            <a class="loginButton disabled">
+                <img src="/static/img/twitch_logo.png" />
+                <b>Login via Twitch</b>
+                <small>Currently disabled...</small>
+            </a>
+    
+            <a class="loginButton" href="https://discord.com/api/oauth2/authorize?client_id=873726171345465445&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A2536%2Fplayerdashboard%2Foauth%2Fdiscord&scope=identify">
+                <img src="/static/img/discord_logo.png" />
+                <b>Login via Discord</b>
+                <small>Choose this option if you want to <span class="material-symbols-rounded liked">favorite</span> songs.</small>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>
