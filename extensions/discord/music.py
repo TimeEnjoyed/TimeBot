@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import secrets
 from typing import Any, Literal, cast
 
 import aiohttp
@@ -42,8 +43,9 @@ class RequestView(discord.ui.View):
         timeout: float | None = 300,
         data: dict[str, Any],
         cog: Music,
-        player: wavelink.Player,
+        player: core.Player,
         track: wavelink.Playable,
+        request_id: str,
     ) -> None:
         super().__init__(timeout=timeout)
 
@@ -51,8 +53,23 @@ class RequestView(discord.ui.View):
         self.player = player
         self.track = track
         self.cog = cog
+        self.request_id = request_id
 
         self.actioned: bool = False
+
+    async def interaction_check(self, interaction: discord.Interaction[core.DiscordBot]) -> bool:
+        member: discord.Member = interaction.user  # type: ignore
+
+        if not member.guild_permissions.kick_members:
+            return False
+
+        if self.actioned or not self.player.approvals.get(self.request_id):
+            self._disable_all_buttons()
+            await self.message.edit(view=self)
+
+            return False
+
+        return True
 
     def _disable_all_buttons(self) -> None:
         for item in self.children:
@@ -64,6 +81,7 @@ class RequestView(discord.ui.View):
             return
 
         self.actioned = True
+        await self.player.remove_approval(self.request_id)
 
         self._disable_all_buttons()
         await self.message.edit(view=self)
@@ -85,6 +103,7 @@ class RequestView(discord.ui.View):
             return
 
         self.actioned = True
+        await self.player.remove_approval(self.request_id)
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
@@ -109,6 +128,7 @@ class RequestView(discord.ui.View):
             return
 
         self.actioned = True
+        await self.player.remove_approval(self.request_id)
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(f"@{self.track.twitch_user.name} - Your song request was accepted by a moderator.")  # type: ignore
@@ -133,6 +153,7 @@ class RequestView(discord.ui.View):
             return
 
         self.actioned = True
+        await self.player.remove_approval(self.request_id)
 
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(
@@ -164,7 +185,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload) -> None:
-        player: wavelink.Player | None = payload.player
+        player: core.Player | None = cast(core.Player, payload.player)
         if not player:
             return
 
@@ -185,9 +206,11 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
-        player: wavelink.Player | None = payload.player
+        player: core.Player | None = cast(core.Player, payload.player)
         if not player:
             return
+
+        await self.bot.server.dispatch_htmx("track_start", data={"player": player})
 
         loaded: wavelink.Playable | None = getattr(player, "loaded", None)
         if loaded and loaded == player.current:  # type: ignore
@@ -205,6 +228,10 @@ class Music(commands.Cog):
 
         # At this point we are playing from Discord not Twitch...
         ...
+
+    @commands.Cog.listener()
+    async def on_wavelink_websocket_closed(self, payload: wavelink.WebsocketClosedEventPayload) -> None:
+        await self.bot.server.dispatch_htmx("player_closed", data={"player": payload.player})
 
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
         # Temp setting for testing purposes...
@@ -247,7 +274,7 @@ class Music(commands.Cog):
 
     async def twitch_redemption(self, data: dict[str, Any]) -> None:
         try:
-            player: wavelink.Player = cast(wavelink.Player, self.bot.voice_clients[0])
+            player: core.Player = cast(core.Player, self.bot.voice_clients[0])
         except IndexError:
             logger.warning("Unable to fulfill song request as the player is not connected.")
             return
@@ -310,6 +337,7 @@ class Music(commands.Cog):
             else:
                 player.queue.put(track)
                 await channel.send(f"@{user_login} - Added the song {track} by {track.author} to the queue.")
+                await self.bot.server.dispatch_htmx("player_update", data={"player": player})
 
             return await self.update_redemption(data=data, status="FULFILLED")
 
@@ -330,10 +358,13 @@ class Music(commands.Cog):
 
         embed.set_image(url=track.artwork)
 
-        view: RequestView = RequestView(data=data, cog=self, player=player, track=track)
+        id_: str = secrets.token_urlsafe(16)
+        await player.add_approval(id_, {"id": id_, "data": data, "track": track})
+
+        view: RequestView = RequestView(data=data, cog=self, player=player, track=track, request_id=id_)
         view.message = await player.channel.send(embed=embed, view=view)
 
-    def run_elevated_checks(self, *, track: wavelink.Playable, player: wavelink.Player) -> list[str]:
+    def run_elevated_checks(self, *, track: wavelink.Playable, player: core.Player) -> list[str]:
         flags: list[str] = []
 
         if track.length > MAX_SONG_LEN:
@@ -357,15 +388,15 @@ class Music(commands.Cog):
         """
         await ctx.defer()
 
-        player: wavelink.Player
-        player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player
+        player = cast(core.Player, ctx.voice_client)
         if player and not hasattr(player, "loaded"):
             await player.disconnect()
             player = None  # type: ignore
 
         if not player:
             try:
-                player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+                player = await ctx.author.voice.channel.connect(cls=core.Player)  # type: ignore
                 player.loaded = None  # type: ignore
             except discord.ClientException:
                 await ctx.send("Please connect to a voice channel first!")
@@ -396,17 +427,17 @@ class Music(commands.Cog):
     @commands.guild_only()
     async def play(self, ctx: commands.Context, *, query: str) -> None:
         """Play a song with the given query."""
-        player: wavelink.Player
+        player: core.Player
 
         if ctx.voice_client and hasattr(ctx.voice_client, "loaded"):
             await ctx.reply("I am unable to play songs currently as I am being used in stream!")
             return
 
         try:
-            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+            player = await ctx.author.voice.channel.connect(cls=core.Player)  # type: ignore
             await player.set_volume(30)
         except discord.ClientException:
-            player = cast(wavelink.Player, ctx.voice_client)
+            player = cast(core.Player, ctx.voice_client)
         except AttributeError:
             await ctx.send("Please join a voice channel first.")
             return
@@ -443,8 +474,8 @@ class Music(commands.Cog):
         """Disconnect the player and clear the state."""
         await ctx.defer()
 
-        player: wavelink.Player
-        player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player
+        player = cast(core.Player, ctx.voice_client)
 
         if not player:
             await ctx.reply("I am not currently connected.")
@@ -466,8 +497,8 @@ class Music(commands.Cog):
         """
         await ctx.defer()
 
-        player: wavelink.Player
-        player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player
+        player = cast(core.Player, ctx.voice_client)
 
         if not player:
             await ctx.reply("I am not currently connected.")
@@ -487,8 +518,8 @@ class Music(commands.Cog):
         """
         await ctx.defer()
 
-        player: wavelink.Player
-        player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player
+        player = cast(core.Player, ctx.voice_client)
 
         if not player:
             await ctx.reply("I am not currently connected.")
@@ -508,8 +539,8 @@ class Music(commands.Cog):
         """Skips the currently playing track."""
         await ctx.defer()
 
-        player: wavelink.Player
-        player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player
+        player = cast(core.Player, ctx.voice_client)
 
         if not player:
             await ctx.reply("I am not currently connected.")
@@ -521,7 +552,7 @@ class Music(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(kick_members=True)
     async def nightcore(self, ctx: commands.Context) -> None:
-        player: wavelink.Player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player = cast(core.Player, ctx.voice_client)
         if not player:
             return
 
@@ -535,7 +566,7 @@ class Music(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(kick_members=True)
     async def no_filter(self, ctx: commands.Context) -> None:
-        player: wavelink.Player = cast(wavelink.Player, ctx.voice_client)
+        player: core.Player = cast(core.Player, ctx.voice_client)
         if not player:
             return
 
