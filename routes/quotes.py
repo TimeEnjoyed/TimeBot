@@ -21,7 +21,8 @@ from typing import TYPE_CHECKING, Any
 
 from starlette.responses import JSONResponse, Response
 
-from api import View, route
+import core
+from api import View, limit, route
 
 
 if TYPE_CHECKING:
@@ -38,7 +39,7 @@ class Quotes(View):
         self.app = app
 
     @route("/{id}", methods=["GET"])
-    # @requires("moderator")
+    @limit(core.config["LIMITS"]["quotes"]["rate"], core.config["LIMITS"]["quotes"]["per"])
     async def fetch_quote(self, request: Request) -> Response:
         path: str = request.path_params.get("id", "")
 
