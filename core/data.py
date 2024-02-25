@@ -20,7 +20,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types_.statuses import StatusCodes
+    from types_.twitch import Badges
 
 
-with open("status_codes.json") as fp:
+with open("resources/status_codes.json") as fp:
     status_codes: dict[str, StatusCodes] = json.load(fp)
+
+
+with open("resources/global_badges.json") as fp:
+    TWITCH_BADGES: Badges = json.load(fp)
