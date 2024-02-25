@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
 
+    import api
     from database import Database
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ SUBBED_ROLE_ID: int = 873044115279990836
 
 class DiscordBot(commands.Bot):
     tbot: TwitchBot
+    server: api.Server
 
     def __init__(self, *, database: Database) -> None:
         self.database = database
@@ -105,6 +107,7 @@ class DiscordBot(commands.Bot):
         for extension in extensions:
             await self.load_extension(extension)
 
+        # await self.load_extension("jishaku")
         logger.info("Loaded extensions for Discord Bot.")
 
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:

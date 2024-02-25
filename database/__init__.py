@@ -115,6 +115,29 @@ class Database:
         assert row
         return UserModel(record=row)
 
+    async def create_user(self, *, discord_id: int = 0, twitch_id: int = 0, moderator: bool = False) -> UserModel:
+        assert self.pool
+
+        query: str = """
+        SELECT * FROM users WHERE discord_id = $1 OR twitch_id = $2
+        """
+        async with self.pool.acquire() as connection:
+            row = await connection.fetchrow(query, discord_id, twitch_id)
+
+            if row:
+                return UserModel(record=row)
+
+            uid: int = generate_id()
+            token: str = generate_token(uid)
+
+            create_query: str = """
+            INSERT INTO users (uid, discord_id, twitch_id, moderator, token) VALUES ($1, $2, $3, $4, $5) RETURNING *
+            """
+            row = await connection.fetchrow(create_query, uid, discord_id or None, twitch_id or None, moderator, token)
+
+            assert row
+            return UserModel(record=row)
+
     async def add_quote(
         self, content: str, *, added_by: str | int, source: str, user: str | int | None = None
     ) -> asyncpg.Record:

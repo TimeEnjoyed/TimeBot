@@ -18,3 +18,4 @@ from .bots import *
 from .config import config as config
 from .constants import *
 from .data import status_codes as status_codes
+from .player import Player as Player
