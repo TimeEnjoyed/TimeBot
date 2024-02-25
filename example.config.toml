@@ -15,6 +15,8 @@ eventsub_secret = ""
 prefix = ""
 port = 2536
 public_host = "http://localhost:2536/"
+secret = ""
+max_age = 604800
 
 [DATABASE]
 dsn = "postgresql://USER:PASSWORD@localhost:5432/timeenjoyed"
@@ -38,3 +40,20 @@ password = ""
 
 [DEBUG]
 enabled = false
+
+[REDIS]
+host = "localhost"
+port = 6379
+db = 0
+
+[LIMITS]
+sse_player = {"rate" = 30, "per" = 30}
+quotes = {"rate" = 5, "per" = 8}
+player_login = {"rate" = 5, "per" = 60}
+player_oauth = {"rate" = 5, "per" = 600}
+player_dashboard = {"rate" = 30, "per" = 30}
+player_queues = {"rate" = 30, "per" = 30}
+player_meta = {"rate" = 30, "per" = 30}
+player_likes = {"rate" = 5, "per" = 15}
+player_json = {"rate" = 5, "per" = 5}
+twitch_auth = {"rate" = 5, "per" = 600}

@@ -18,6 +18,8 @@ from typing import TypedDict
 class Discord(TypedDict):
     prefix: str
     token: str
+    client_id: str
+    client_secret: str
 
 
 class Twitch(TypedDict):
@@ -35,6 +37,8 @@ class Api(TypedDict):
     prefix: str
     port: int
     public_host: str
+    secret: str
+    max_age: int
 
 
 class Database(TypedDict):
@@ -65,6 +69,30 @@ class Debug(TypedDict):
     enabled: bool
 
 
+class Redis(TypedDict):
+    host: str
+    port: int
+    db: int
+
+
+class RateLimit(TypedDict):
+    rate: int
+    per: int
+
+
+class Limits(TypedDict):
+    sse_player: RateLimit
+    quotes: RateLimit
+    player_login: RateLimit
+    player_oauth: RateLimit
+    player_dashboard: RateLimit
+    player_queues: RateLimit
+    player_meta: RateLimit
+    player_likes: RateLimit
+    player_json: RateLimit
+    twitch_auth: RateLimit
+
+
 class Config(TypedDict):
     DISCORD: Discord
     TWITCH: Twitch
@@ -74,3 +102,5 @@ class Config(TypedDict):
     TIME_SUBS: EventSubs
     WAVELINK: Wavelink
     DEBUG: Debug
+    REDIS: Redis
+    LIMITS: Limits
