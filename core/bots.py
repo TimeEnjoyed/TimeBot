@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import pathlib
+import random
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
@@ -296,3 +297,12 @@ class TwitchBot(tcommands.Bot):
             "moderator_id": str(time.id),
         }
         await self.send_shoutout(payload=payload)
+
+    async def event_message(self, message: twitchio.Message) -> None:
+        if message.echo:
+            return
+
+        # Make sure to import random
+        user: twitchio.Chatter = message.author  # type: ignore
+        await self.database.upsert_user_twitch(twitch_id=int(user.id), points=random.randint(0, 10))  # type: ignore
+        await self.handle_commands(message)

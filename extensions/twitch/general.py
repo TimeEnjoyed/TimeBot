@@ -167,6 +167,79 @@ class General(commands.Cog):
 
         await ctx.reply(f"There are {total} {mbti_type} types in the server!")
 
+    @commands.command()
+    async def addpoints_test(self, ctx: commands.Context, name: str, points: int | None = None) -> None:
+        if not name or not points:
+            await ctx.reply("You're missing a name or number. TRY AGAIN!")
+            return
+        if not ctx.author.is_mod:  # type: ignore
+            return
+        if points > 5000:
+            await ctx.reply("You cannot add more than 5000 points at a time!")
+            return
+        name = name.removeprefix("@").lower()
+        try:
+            users: list[twitchio.User] = await self.bot.fetch_users(names=[name])
+        except twitchio.HTTPException:
+            await ctx.reply(f"Could not find the user {name}")
+            return
+        user_id: int = int(users[0].id)
+        print(user_id)
+        user_res = await self.bot.database.upsert_user_twitch(twitch_id=user_id, points=points)
+
+        await ctx.reply(f"{name} had {user_res.points - points} and now has {user_res.points}")
+        # await self.bot.database.upsert_user_twitch(twitch_id=int(user.id), points=random.randint(0, 10))
+        # fetch twitchio user.id from twitchio user.name...
+
+        return
+
+    @commands.command()
+    async def removepoints_test(self, ctx: commands.Context, name: str, points: int | None = None) -> None:
+        if not name or not points:
+            await ctx.reply("You're missing a name or number. TRY AGAIN!")
+            return
+        if not ctx.author.is_mod:  # type: ignore
+            return
+        if points > 100000:
+            await ctx.reply("You cannot add more than 5000 points at a time!")
+            return
+        points = -points
+        name = name.removeprefix("@").lower()
+        try:
+            users: list[twitchio.User] = await self.bot.fetch_users(names=[name])
+        except twitchio.HTTPException:
+            await ctx.reply(f"Could not find the user {name}")
+            return
+        user_id: int = int(users[0].id)
+        print(user_id)
+        user_res = await self.bot.database.upsert_user_twitch(twitch_id=user_id, points=points)
+
+        await ctx.reply(f"{name} lost {-(points)} and now has {user_res.points}")
+        # await self.bot.database.upsert_user_twitch(twitch_id=int(user.id), points=random.randint(0, 10))
+        # fetch twitchio user.id from twitchio user.name...
+
+        return
+
+    @commands.command()
+    async def points(self, ctx: commands.Context, name: str) -> None:
+        if not name:
+            await ctx.reply("You're missing a name or number. TRY AGAIN!")
+            return
+        if not ctx.author.is_mod:  # type: ignore
+            return
+        name = name.removeprefix("@").lower()
+        try:
+            users: list[twitchio.User] = await self.bot.fetch_users(names=[name])
+        except twitchio.HTTPException:
+            await ctx.reply(f"Could not find the user {name}")
+            return
+        user_id: int = int(users[0].id)
+        userspoints: int = await self.bot.database.fetch_points(twitch_id=user_id)
+        await ctx.reply(f"{name} has {userspoints} points")
+
+    # TODO: givepoints, creates a user every time there's someone new in the chat.
+    # read users in the chat. if the twitch_id doesn't exist in the db, add the user.
+
     @routines.routine(seconds=60)
     async def midnight(self) -> None:
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
