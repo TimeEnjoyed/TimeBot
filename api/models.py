@@ -33,6 +33,7 @@ class UserModel:
         self.moderator: bool = record["moderator"]
         self.token: str = record["token"]
         self.created: datetime.datetime = record["created"]
+        self.points: int = record["points"]
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -42,4 +43,5 @@ class UserModel:
             "moderator": self.moderator,
             "token": self.token,
             "created": self.created.isoformat(),
+            "points": self.points,
         }
