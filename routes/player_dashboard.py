@@ -79,6 +79,17 @@ class PlayerDashboard(View):
         if not user_id:
             return None
 
+        guild: discord.Guild | None = self.app.dbot.get_guild(core.TIME_GUILD)
+        if not guild:
+            return None
+
+        member: discord.Member | None = guild.get_member(user_id)
+        if not member:
+            return None
+
+        if not any(r.id in core.config["DEBUG"]["access"] for r in member.roles):
+            return None
+
         to_return: dict[str, Any] = {
             "id": user_id,
             "service": "discord",
