@@ -114,6 +114,30 @@ class PlayerDashboard(View):
     async def login(self, request: Request) -> Response:
         return FileResponse("web/player/login.html")
 
+    @route("/login/redirect", methods=["GET"])
+    @limit(core.config["LIMITS"]["player_login"]["rate"], core.config["LIMITS"]["player_login"]["per"])
+    async def login_redirect(self, request: Request) -> Response:
+        service: str | None = request.query_params.get("service", None)
+        if not service:
+            return RedirectResponse(url="/playerdashboard/login")
+
+        if service == "discord":
+            client_id: str = core.config["DISCORD"]["client_id"]
+            redirect_uri: str = DISCORD_REDIRECT_URL
+            url: str = (
+                f"https://discord.com/api/oauth2/authorize"
+                f"?client_id={client_id}"
+                "&response_type=code"
+                f"&redirect_uri={redirect_uri}"
+                "&scope=identify"
+            )
+        elif service == "twitch":
+            return Response("Twitch OAuth is not yet implemented.", status_code=400)
+        else:
+            return Response("Invalid Service", status_code=400)
+
+        return RedirectResponse(url=url, status_code=307)
+
     @route("/logout", methods=["GET"])
     async def logout(self, request: Request) -> Response:
         request.session.clear()
