@@ -61,6 +61,7 @@ class DiscordBot(commands.Bot):
         self.loaded: bool = False
 
         super().__init__(intents=intents, command_prefix=config["DISCORD"]["prefix"])
+        self.tree.on_error = self.on_app_command_error
 
     async def on_ready(self) -> None:
         if self.loaded:
@@ -113,6 +114,14 @@ class DiscordBot(commands.Bot):
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
         node: wavelink.Node = payload.node
         logger.info("Wavelink successfully connected: %s. Resumed: %s", node.identifier, payload.resumed)
+
+    async def on_app_command_error(
+        self, interaction: discord.Interaction, exception: discord.app_commands.AppCommandError
+    ) -> None:
+        if isinstance(exception, discord.app_commands.CommandNotFound):
+            return
+
+        logger.exception(exception, exc_info=True)
 
     async def on_command_error(self, context: commands.Context, exception: commands.CommandError) -> None:
         if isinstance(exception, commands.CommandNotFound):
