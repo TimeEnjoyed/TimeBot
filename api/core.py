@@ -59,7 +59,10 @@ class _Route:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive, send)
-        ip: str = request.headers.get("X-Forwarded-For", None) or request.client.host  # type: ignore
+        if not request.client:
+            ip: str = request.headers["X-Forwarded-For"]
+        else:
+            ip: str = request.client.host
 
         exempt: ExemptCallable = self._limits.get("exempt", None)
         if exempt is not None and await exempt(request):
