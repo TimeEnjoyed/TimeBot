@@ -84,6 +84,6 @@ class SSE(View):
                 logger.info('EventSource "%s" connection closed: %s', id_, e)
 
                 del self.app.htmx_listeners[id_]
-                return
+                raise e
 
         return EventSourceResponse(publisher())
