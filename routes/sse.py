@@ -47,10 +47,8 @@ class SSE(View):
     @route("/player", methods=["GET"])
     @limit(core.config["LIMITS"]["sse_player"]["rate"], core.config["LIMITS"]["sse_player"]["per"])
     async def music_player_sse(self, request: Request) -> EventSourceResponse | Response:
-        if not request.client:
-            ip: str = request.headers["X-Forwarded-For"]
-        else:
-            ip: str = request.client.host
+        forwarded: str | None = request.headers.get("X-Forwarded-For", None)
+        ip: str = forwarded.split(",")[0] if forwarded else request.client.host  # type: ignore
 
         current: int = len([l for l in self.app.htmx_listeners if l.startswith(f"{ip}@")])
         if current >= 30:
