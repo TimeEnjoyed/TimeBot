@@ -14,6 +14,7 @@ limitations under the License.
 """
 from typing import Any
 
+import discord
 import wavelink
 
 
@@ -23,7 +24,9 @@ __all__ = ("Player",)
 class Player(wavelink.Player):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
         self.approvals: dict[str, dict[str, Any]] = {}
+        self.thread: discord.Thread | None = None
 
     async def remove_approval(self, id_: str) -> None:
         self.approvals.pop(id_, None)

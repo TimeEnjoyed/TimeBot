@@ -1,6 +1,8 @@
 [DISCORD]
 prefix = ""
 token = ""
+client_id = ""
+client_secret = ""
 
 [TWITCH]
 prefix = ""
@@ -26,6 +28,7 @@ stream_refs_id = 874734169622716437
 announcements_id = 862800502848749609
 announcements_webhook = ""
 music_webhook = ""
+music_channel_id = 860923198669062186
 guild_id = 859565527343955998
 
 [TIME_SUBS]
@@ -40,6 +43,7 @@ password = ""
 
 [DEBUG]
 enabled = false
+access = []
 
 [REDIS]
 host = "localhost"

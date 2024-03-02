@@ -14,6 +14,7 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import secrets
@@ -421,6 +422,24 @@ class Music(commands.Cog):
                 await player.play(track, replace=True, volume=20)
 
         player.loaded = track  # type: ignore
+
+        if not player.thread:
+            assert ctx.guild is not None
+
+            music_channel: discord.abc.GuildChannel | None = ctx.guild.get_channel(
+                core.config["GENERAL"]["music_channel_id"]
+            )
+
+            if music_channel is not None and isinstance(music_channel, discord.TextChannel):
+                date: str = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d %H")
+
+                thread = await music_channel.create_thread(
+                    name=f"Favourites {date}",
+                    auto_archive_duration=1440,
+                    reason="Stream Music Thread",
+                )
+                player.thread = thread
+
         await ctx.send("Successfully setup the stream player!")
 
     @commands.hybrid_command()

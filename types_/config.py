@@ -50,6 +50,7 @@ class General(TypedDict):
     announcements_id: int
     announcements_webhook: str
     music_webhook: str
+    music_channel_id: int
     guild_id: int
 
 
@@ -67,6 +68,7 @@ class Wavelink(TypedDict):
 
 class Debug(TypedDict):
     enabled: bool
+    access: list[int]
 
 
 class Redis(TypedDict):

@@ -494,6 +494,12 @@ class PlayerDashboard(View):
     @route("/like", methods=["POST"])
     @limit(core.config["LIMITS"]["player_likes"]["rate"], core.config["LIMITS"]["player_likes"]["per"])
     async def like_track(self, request: Request) -> Response:
+        player: core.Player | None
+        player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)  # type: ignore
+
+        if not player or not hasattr(player, "loaded"):
+            return Response("No player is currently active.", status_code=400)
+
         session: dict[str, Any] = request.session
         if not session:
             return Response("Unauthorized", status_code=401)
@@ -522,10 +528,11 @@ class PlayerDashboard(View):
         if identifier in self.liked[member.id]:
             return HTMLResponse("<span class='material-symbols-rounded liked'>favorite</span>")
 
-        try:
-            await member.send(f"Hey {member.display_name}, you liked this song from stream:\n{uri}")
-        except discord.HTTPException:
-            return Response("Internal Server Error", status_code=500)
+        if player.thread:
+            try:
+                await player.thread.send(f"Hey {member.mention}, you liked this song from stream:\n{uri}")
+            except discord.HTTPException:
+                return Response("Internal Server Error", status_code=500)
 
         self.liked[member.id].append(identifier)
 
