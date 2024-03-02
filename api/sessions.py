@@ -96,6 +96,10 @@ class SessionMiddleware:
 
         try:
             cookie: bytes = connection.cookies[self.name].encode("utf-8")
+        except KeyError:
+            cookie = b""
+
+        try:
             unsigned: str = self.signing.unsign(base64.b64decode(cookie)).decode("utf-8")
             data: dict[str, Any] = json.loads(unsigned)
             session = await self.storage.get(data)
@@ -128,6 +132,9 @@ class SessionMiddleware:
                 headers.append("Set-Cookie", self.cookies(value=signed.decode("utf-8")))
 
                 await self.storage.set(secret_key, scope["session"], max_age=self.max_age)
+
+            elif not session and not original and cookie:
+                headers.append("Set-Cookie", self.cookies(value="null", clear=True))
 
             await send(message)
 
