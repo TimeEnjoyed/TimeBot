@@ -5,3 +5,4 @@ from .oauth import OAuth as OAuthView
 from .player_dashboard import PlayerDashboard as PlayerDashboardView
 from .quotes import Quotes as QuotesView
 from .sse import SSE as SSEView
+from .websockets import Websockets as WebsocketsView

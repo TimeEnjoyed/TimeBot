@@ -35,6 +35,8 @@ from .sessions import SessionMiddleware
 if TYPE_CHECKING:
     from database import Database
 
+    from ..types_.websockets import WebsocketListener
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -45,6 +47,7 @@ class Server(Application):
         self.dbot = dbot
 
         self.htmx_listeners: dict[str, asyncio.Queue] = {}
+        self._websocket_listeners: dict[str, WebsocketListener] = {}
 
         views: list[View] = [
             OAuthView(self),
@@ -54,6 +57,7 @@ class Server(Application):
             PlayerView(self),
             PlayerDashboardView(self),
             SSEView(self),
+            WebsocketsView(self),
         ]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),

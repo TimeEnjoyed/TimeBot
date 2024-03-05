@@ -25,6 +25,7 @@ import aiohttp
 import discord
 from starlette.responses import Response
 
+import api
 import core
 from api import View, route
 
@@ -108,6 +109,22 @@ class EventSub(View):
         subscription: dict[str, Any] = data["subscription"]
         type_: str = subscription["type"]
         event: dict[str, Any] = data["event"]
+
+        for wsuuid, websocket in self.app._websocket_listeners.items():
+            if "eventsub" not in websocket["subscriptions"]:
+                continue
+
+            try:
+                await websocket["websocket"].send_json(
+                    {
+                        "op": api.WebsocketOPCodes.EVENT,
+                        "d": {"event": "eventsub", "data": data},
+                    },
+                )
+            except Exception as e:
+                logger.warning("Unable to send EventSub notification to websocket %s: %s", wsuuid, e)
+            else:
+                logger.info("EventSub notification dispatched to websocket %s.", wsuuid)
 
         if type_ == "stream.online":
             logger.info("EventSub Stream Online received.")

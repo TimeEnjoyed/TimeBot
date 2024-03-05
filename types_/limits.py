@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict
 
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.websockets import WebSocket
 
 from api.core import _Route
 
@@ -38,10 +39,10 @@ __all__ = (
 )
 
 
-ResponseType: TypeAlias = Coroutine[Any, Any, Response]
+ResponseType: TypeAlias = Coroutine[Any, Any, Response | None]
 
 
-ExemptCallable: TypeAlias = Callable[[Request], Awaitable[bool]] | None
+ExemptCallable: TypeAlias = Callable[[Request | WebSocket], Awaitable[bool]] | None
 LimitDecorator: TypeAlias = Callable[[Any, Request], ResponseType] | _Route
 T_LimitDecorator: TypeAlias = Callable[..., LimitDecorator]
 

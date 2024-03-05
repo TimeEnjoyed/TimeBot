@@ -93,6 +93,7 @@ class Limits(TypedDict):
     player_likes: RateLimit
     player_json: RateLimit
     twitch_auth: RateLimit
+    websockets: RateLimit
 
 
 class Config(TypedDict):
