@@ -19,7 +19,7 @@ from typing import Any, Self
 import asyncpg
 
 import core
-from api import UserModel, generate_id, generate_token
+from api import FirstRedeemModel, UserModel, generate_id, generate_token
 
 
 __all__ = ("Database",)
@@ -212,3 +212,35 @@ class Database:
 
         assert row
         return row["points"]
+
+    async def add_redeem(self, twitch_id: int) -> FirstRedeemModel:
+        # step 5 of first_redeem
+        assert self.pool
+
+        query: str = """
+        INSERT INTO first_redeem (twitch_id)
+        VALUES ($1)
+        RETURNING *
+        """
+
+        async with self.pool.acquire() as connection:
+            row = await connection.fetchrow(query, twitch_id)
+
+        assert row
+        return FirstRedeemModel(record=row)
+
+    # get the current streak of first_redeem
+    async def fetch_redeems(self) -> list[FirstRedeemModel]:
+        assert self.pool
+
+        query: str = """
+        SELECT * FROM first_redeem
+        ORDER BY timestamp DESC
+        """
+
+        async with self.pool.acquire() as connection:
+            rows = await connection.fetch(query)
+
+        assert rows
+
+        return [FirstRedeemModel(row) for row in rows]

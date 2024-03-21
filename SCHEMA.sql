@@ -23,3 +23,8 @@ CREATE TABLE IF NOT EXISTS quotes (
     source TEXT NOT NULL,
     created TIMESTAMP DEFAULT (now() at time zone 'utc')
 );
+
+CREATE TABLE IF NOT EXISTS first_redeem (
+    twitch_id BIGINT NOT NULL,
+    timestamp TIMESTAMP DEFAULT (now() at time zone 'utc')
+)

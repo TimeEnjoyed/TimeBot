@@ -14,6 +14,6 @@ limitations under the License.
 """
 
 from .core import *
-from .models import UserModel as UserModel
+from .models import FirstRedeemModel as FirstRedeemModel, UserModel as UserModel
 from .server import Server as Server
 from .tokens import *

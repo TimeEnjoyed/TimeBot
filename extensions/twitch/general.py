@@ -16,6 +16,7 @@ limitations under the License.
 import logging
 import zoneinfo
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import asyncpg
 import discord
@@ -25,6 +26,8 @@ from twitchio.ext import commands, routines
 import core
 from core.constants import TIMEZONES
 
+if TYPE_CHECKING:
+    from api import FirstRedeemModel
 
 STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
 
@@ -223,7 +226,7 @@ class General(commands.Cog):
     @commands.command()
     async def points(self, ctx: commands.Context, name: str) -> None:
         if not name:
-            await ctx.reply("You're missing a name or number. TRY AGAIN!")
+            await ctx.reply("You're missing a name or number. TRY AGAIN!")  # type: ignore
             return
         if not ctx.author.is_mod:  # type: ignore
             return
@@ -236,9 +239,76 @@ class General(commands.Cog):
         user_id: int = int(users[0].id)
         userspoints: int = await self.bot.database.fetch_points(twitch_id=user_id)
         await ctx.reply(f"{name} has {userspoints} points")
+        return
 
     # TODO: givepoints, creates a user every time there's someone new in the chat.
     # read users in the chat. if the twitch_id doesn't exist in the db, add the user.
+
+    @commands.command()
+    async def first(self, ctx: commands.Context, name: str) -> None:
+        channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
+        if not channel:
+            return
+        if not name:
+            await ctx.reply("Please include the name you're checking for")  # type: ignore
+            return
+        name = name.removeprefix("@").lower()
+
+        try:
+            users: list[twitchio.User] = await self.bot.fetch_users(names=[name])
+        except twitchio.HTTPException:
+            await ctx.reply(f"Could not find the user {name}")
+
+        user_id: int = users[0].id
+        first_data: list[FirstRedeemModel] = await self.bot.database.fetch_redeems()
+
+        all_streaks: list[list[int]] = []
+        curr_list: list[int] = []
+
+        for row in first_data:
+            if curr_list == []:
+                curr_list.append(row.twitch_id)
+
+            elif row.twitch_id in curr_list:
+                curr_list.append(row.twitch_id)
+                if row == first_data[-1]:
+                    all_streaks.append(curr_list)
+
+            elif row.twitch_id not in curr_list:
+                all_streaks.append(curr_list)
+                curr_list = []
+                curr_list.append(row.twitch_id)
+                if row == first_data[-1]:
+                    all_streaks.append(curr_list)
+
+        users_streaks: list[int] = [len(streak) for streak in all_streaks if user_id in streak]
+        # for streak in all_streaks:
+        #     if user_id in streak:
+        #         users_streaks.append(len(streak))  # add length of streak to the user's list of streak counts
+
+        if len(users_streaks) < 1:
+            await channel.send(f"{name} hasn't gotten first before :,(")
+            return
+        streak = max(users_streaks)
+
+        await channel.send(f"{name} got first {streak} times in a row! PogChamp")
+
+    @commands.Cog.event()  # type: ignore
+    async def event_api_first_redeem(self, event: dict[str, Any]) -> None:
+        channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
+        if not channel:
+            return
+
+        all_redeems = await self.bot.database.fetch_redeems()
+        redeemer_twitch_id = int(event["user_id"])
+        count = 0
+
+        for redeem in all_redeems:
+            if redeemer_twitch_id != redeem.twitch_id:
+                break
+            count += 1
+
+        await channel.send(f"{event['user_name']} got first {count} times in a row! PogChamp")
 
     @routines.routine(seconds=60)
     async def midnight(self) -> None:
