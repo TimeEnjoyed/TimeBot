@@ -174,7 +174,7 @@ class General(commands.Cog):
         for timezone in TIMEZONES:
             tz: zoneinfo.ZoneInfo = zoneinfo.ZoneInfo(timezone)
             current: datetime = datetime.now(tz)
-            logger.info(current)
+            logger.debug("Midnight Routine: It is currently %s in %s", current, timezone)
 
             day_str: str = core.format_day(date=current.day, superscript=True)
 
