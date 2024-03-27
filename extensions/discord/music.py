@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -431,7 +432,7 @@ class Music(commands.Cog):
             )
 
             if music_channel is not None and isinstance(music_channel, discord.TextChannel):
-                date: str = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d %H")
+                date: str = datetime.datetime.now(tz=datetime.UTC).strftime("%Y-%m-%d %H")
 
                 thread = await music_channel.create_thread(
                     name=f"Favourites {date}",

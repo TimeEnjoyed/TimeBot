@@ -12,13 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import datetime
 
 
 __all__ = ("format_day",)
 
 ORDINALS: dict[int, str] = {1: "st", 2: "nd", 3: "rd", 4: "th"}
-SUPERSCRIPT_TABLE = str.maketrans("".join(ORDINALS.values()), "\u02E2\u1D57\u207F\u1D48\u02B3\u1D48\u1D57\u02B0")
+SUPERSCRIPT_TABLE = str.maketrans("".join(ORDINALS.values()), "\u02e2\u1d57\u207f\u1d48\u02b3\u1d48\u1d57\u02b0")
 
 
 def format_day(date: datetime.datetime | int, *, superscript: bool = False) -> str:

@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import logging
@@ -50,7 +51,7 @@ class Websockets(View):
                 logger.info('Websocket connection "%s" closed by remote.', uuid)
                 return
 
-            op: int = message.get("op", None)
+            op: int = message.get("op")
 
             if op == api.WebsocketOPCodes.SUBSCRIBE:
                 data: dict[str, Any] = message.get("d", {})
