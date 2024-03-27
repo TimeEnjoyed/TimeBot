@@ -23,7 +23,6 @@ MBTI_TYPES: list[str] = [
     "INFP",
 ]
 
-
 TIMEZONES: list[str] = [
     "US/Pacific",
     "US/Eastern",
