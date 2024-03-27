@@ -344,7 +344,7 @@ class PlayerDashboard(View):
                     """<img src="https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2" />"""
                 )
 
-            uid: int = session.get("id")
+            uid: int | None = session.get("id")
             if uid:
                 if uid not in self.liked:
                     self.liked[uid] = []
@@ -422,7 +422,7 @@ class PlayerDashboard(View):
 
         avatar: str | None = request.session.get("avatar", None)
         name: str | None = request.session.get("name", None)
-        uid: int = session.get("id")
+        uid: int | None = session.get("id")
 
         if avatar and name:
             html = html.format(avatar, name)
@@ -458,7 +458,7 @@ class PlayerDashboard(View):
         author = f"{escape(current.author)[:40]}{'...' if len(current.author) > 40 else ''}"
 
         fave: str = """<span></span>"""
-        uid: int = session.get("id")
+        uid: int | None = session.get("id")
 
         if uid and session.get("service") == "discord":
             if uid not in self.liked:
@@ -504,8 +504,8 @@ class PlayerDashboard(View):
         if not session:
             return Response("Unauthorized", status_code=401)
 
-        uid: int = session.get("id")
-        if not uid and request.session.get("service") != "discord":
+        uid: int | None = session.get("id")
+        if not uid or request.session.get("service") != "discord":
             return Response("Unauthorized", status_code=401)
 
         identifier: str = urllib.parse.unquote(request.query_params.get("identifier", ""))
@@ -552,8 +552,8 @@ class PlayerDashboard(View):
         if not session:
             return Response("Unauthorized", status_code=401)
 
-        uid: int = session.get("id")
-        if not uid and request.session.get("service") != "discord":
+        uid: int | None = session.get("id")
+        if not uid or request.session.get("service") != "discord":
             return Response("Unauthorized", status_code=401)
 
         if not identifier or not uri:

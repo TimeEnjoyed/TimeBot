@@ -51,7 +51,7 @@ class Websockets(View):
                 logger.info('Websocket connection "%s" closed by remote.', uuid)
                 return
 
-            op: int = message.get("op")
+            op: int | None = message.get("op")
 
             if op == api.WebsocketOPCodes.SUBSCRIBE:
                 data: dict[str, Any] = message.get("d", {})
