@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,7 @@ from starlette.authentication import requires
 from starlette.responses import JSONResponse, Response
 
 import core
-from api import View, route
+from api import View, limit, route
 
 
 if TYPE_CHECKING:
@@ -38,6 +39,7 @@ class Player(View):
         self.app = app
 
     @route("/info", methods=["GET"])
+    @limit(core.config["LIMITS"]["player_json"]["rate"], core.config["LIMITS"]["player_json"]["per"])
     async def get_player(self, request: Request) -> Response:
         player: wavelink.Player | None
         player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
@@ -63,6 +65,7 @@ class Player(View):
         return JSONResponse(data, status_code=200)
 
     @route("/current", methods=["GET"])
+    @limit(core.config["LIMITS"]["player_json"]["rate"], core.config["LIMITS"]["player_json"]["per"])
     async def get_current_track(self, request: Request) -> Response:
         player: wavelink.Player | None
         player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)
@@ -76,6 +79,7 @@ class Player(View):
         return JSONResponse(player.current.raw_data, status_code=200)
 
     @route("/queue", methods=["GET"])
+    @limit(core.config["LIMITS"]["player_json"]["rate"], core.config["LIMITS"]["player_json"]["per"])
     async def player_queue(self, request: Request) -> Response:
         player: wavelink.Player | None
         player = wavelink.Pool.get_node().get_player(core.TIME_GUILD)

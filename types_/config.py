@@ -12,12 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from typing import TypedDict
 
 
 class Discord(TypedDict):
     prefix: str
     token: str
+    client_id: str
+    client_secret: str
 
 
 class Twitch(TypedDict):
@@ -35,6 +38,8 @@ class Api(TypedDict):
     prefix: str
     port: int
     public_host: str
+    secret: str
+    max_age: int
 
 
 class Database(TypedDict):
@@ -46,6 +51,7 @@ class General(TypedDict):
     announcements_id: int
     announcements_webhook: str
     music_webhook: str
+    music_channel_id: int
     guild_id: int
 
 
@@ -63,6 +69,32 @@ class Wavelink(TypedDict):
 
 class Debug(TypedDict):
     enabled: bool
+    access: list[int]
+
+
+class Redis(TypedDict):
+    host: str
+    port: int
+    db: int
+
+
+class RateLimit(TypedDict):
+    rate: int
+    per: int
+
+
+class Limits(TypedDict):
+    sse_player: RateLimit
+    quotes: RateLimit
+    player_login: RateLimit
+    player_oauth: RateLimit
+    player_dashboard: RateLimit
+    player_queues: RateLimit
+    player_meta: RateLimit
+    player_likes: RateLimit
+    player_json: RateLimit
+    twitch_auth: RateLimit
+    websockets: RateLimit
 
 
 class Config(TypedDict):
@@ -74,3 +106,5 @@ class Config(TypedDict):
     TIME_SUBS: EventSubs
     WAVELINK: Wavelink
     DEBUG: Debug
+    REDIS: Redis
+    LIMITS: Limits

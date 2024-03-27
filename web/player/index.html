@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>TimeBot - Music Dashboard</title>
+
+    <!-- PACKAGES -->
+    <script src="/static/packages/htmx.min.js"></script>
+    <!-- SCRIPTS -->
+    <script src="/static/scripts.js"></script>
+    <!-- STYLES -->
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body hx-sse="connect:/sse/player">
+    <div class="container">
+        <div class="header">
+            <div class="user">
+                <img class="userAvatar" src="/static/img/time_bot.png" alt="User Avatar">
+                <span class="userName">TimeBot</span>
+            </div>
+    
+            <div class="headerCenter">
+                <h3>Stream Music Dashboard</h3>
+            </div>
+            <div class="headerLogin" hx-trigger="load" hx-get="/playerdashboard/user">
+                <a href="/playerdashboard/login">Login</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="queues">
+                <div class="queueTabs">
+                    <span id="tab0" onclick="setTab(0)">Upcoming</span>
+                    <span id="tab1" onclick="setTab(1)">History</span>
+                    <span id="tab2" onclick="setTab(2)">Requests</span>
+                </div>
+
+                <div class="queueContainer">
+                    <div class="queueContent" hx-trigger="load, sse:track_start, sse:player_update" hx-get="/playerdashboard/queue" hx-boost="true"></div>
+                    <div class="queueContent" hx-trigger="load, likedSong from:body, sse:track_start, sse:player_update" hx-get="/playerdashboard/history"></div>
+                    <div class="queueContent" hx-trigger="load, sse:track_start, sse:player_update" hx-get="/playerdashboard/requests"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footerPlaying" hx-trigger="load, likedSong from:body, sse:sent_song, sse:track_start" hx-get="/playerdashboard/footer/playing"></div>
+
+            <div class="controlsContainer">
+                <span class="material-symbols-rounded control">info</span>
+                <span class="material-symbols-rounded control">play_arrow</span>
+                <span class="material-symbols-rounded control">skip_next</span>
+            </div>
+
+            <div class="controlsContainer">
+                <span class="material-symbols-rounded control">volume_down</span>
+                <span class="material-symbols-rounded control">volume_up</span>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

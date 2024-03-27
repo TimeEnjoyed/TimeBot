@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import asyncio
 import copy
 import logging
@@ -92,6 +93,7 @@ async def main() -> None:
 
         # Init the API Server...
         app: api.Server = api.Server(database=database, tbot=tbot, dbot=dbot)
+        dbot.server = app
 
         # Configure Uvicorn to run our API and keep the asyncio event loop running...
         config = uvicorn.Config(app, host="localhost", port=core.config["API"]["port"])

@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,7 +21,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types_.statuses import StatusCodes
+    from types_.twitch import Badges
 
 
-with open("status_codes.json") as fp:
+with open("resources/status_codes.json") as fp:
     status_codes: dict[str, StatusCodes] = json.load(fp)
+
+
+with open("resources/global_badges.json") as fp:
+    TWITCH_BADGES: Badges = json.load(fp)

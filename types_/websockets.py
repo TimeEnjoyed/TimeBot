@@ -12,21 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import datetime
+
+from __future__ import annotations
+
+from typing import TypedDict
+
+from starlette.websockets import WebSocket
 
 
-__all__ = ("format_day",)
-
-ORDINALS: dict[int, str] = {1: "st", 2: "nd", 3: "rd", 4: "th"}
-SUPERSCRIPT_TABLE = str.maketrans("".join(ORDINALS.values()), "\u02e2\u1d57\u207f\u1d48\u02b3\u1d48\u1d57\u02b0")
-
-
-def format_day(date: datetime.datetime | int, *, superscript: bool = False) -> str:
-    day_int: int = date if isinstance(date, int) else date.day
-    ordinal: str = ORDINALS.get(day_int % 10, "th") if day_int not in (11, 12, 13) else "th"
-
-    day: str = f"{day_int}{ordinal}"
-    if superscript:
-        return day.translate(SUPERSCRIPT_TABLE)
-
-    return day
+class WebsocketListener(TypedDict):
+    websocket: WebSocket
+    subscriptions: set[str]

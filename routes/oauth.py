@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import json
@@ -21,7 +22,7 @@ from typing import TYPE_CHECKING
 import aiohttp
 from starlette.responses import Response
 
-from api import View, route
+from api import View, limit, route
 from core import config
 
 
@@ -50,6 +51,7 @@ class OAuth(View):
         self.app = app
 
     @route("/twitch", methods=["GET"], prefix=True)
+    @limit(config["LIMITS"]["twitch_auth"]["rate"], config["LIMITS"]["twitch_auth"]["per"])
     async def twitch_auth(self, request: Request) -> Response:
         params = request.query_params
         code: str | None = params.get("code", None)
