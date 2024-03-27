@@ -5,7 +5,7 @@ preview = true
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-select = [
+lint.select = [
     "C4",
     "F",
     "G",
@@ -19,7 +19,7 @@ select = [
     "PERF",
     "ANN",
 ]
-ignore = [
+lint.ignore = [
     "F401",
     "F402",
     "F403",
@@ -63,15 +63,15 @@ exclude = [
     "venv",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
 lines-after-imports = 2
 
-[tool.ruff.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
 
 [tool.ruff.format]

@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from __future__ import annotations
+
 from typing import TypedDict
 
+from starlette.websockets import WebSocket
 
-class StatusCodes(TypedDict):
-    name: str
-    description: str
-    url: str
+
+class WebsocketListener(TypedDict):
+    websocket: WebSocket
+    subscriptions: set[str]

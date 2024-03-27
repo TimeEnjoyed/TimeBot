@@ -16,7 +16,21 @@ limitations under the License.
 from typing import TypedDict
 
 
-class StatusCodes(TypedDict):
-    name: str
+class BadgeVersion(TypedDict):
+    id: str
+    image_url_1x: str
+    image_url_2x: str
+    image_url_4x: str
+    title: str
     description: str
-    url: str
+    click_action: str
+    click_url: str
+
+
+class Badge(TypedDict):
+    set_id: str
+    versions: list[BadgeVersion]
+
+
+class Badges(TypedDict):
+    data: list[Badge]

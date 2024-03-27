@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
 
+    import api
     from database import Database
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ SUBBED_ROLE_ID: int = 873044115279990836
 
 class DiscordBot(commands.Bot):
     tbot: TwitchBot
+    server: api.Server
 
     def __init__(self, *, database: Database) -> None:
         self.database = database
@@ -59,6 +62,7 @@ class DiscordBot(commands.Bot):
         self.loaded: bool = False
 
         super().__init__(intents=intents, command_prefix=config["DISCORD"]["prefix"])
+        self.tree.on_error = self.on_app_command_error
 
     async def on_ready(self) -> None:
         if self.loaded:
@@ -105,11 +109,20 @@ class DiscordBot(commands.Bot):
         for extension in extensions:
             await self.load_extension(extension)
 
+        # await self.load_extension("jishaku")
         logger.info("Loaded extensions for Discord Bot.")
 
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
         node: wavelink.Node = payload.node
         logger.info("Wavelink successfully connected: %s. Resumed: %s", node.identifier, payload.resumed)
+
+    async def on_app_command_error(
+        self, interaction: discord.Interaction, exception: discord.app_commands.AppCommandError
+    ) -> None:
+        if isinstance(exception, discord.app_commands.CommandNotFound):
+            return
+
+        logger.exception(exception, exc_info=True)
 
     async def on_command_error(self, context: commands.Context, exception: commands.CommandError) -> None:
         if isinstance(exception, commands.CommandNotFound):

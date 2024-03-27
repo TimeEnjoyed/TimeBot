@@ -12,19 +12,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+from __future__ import annotations
+
 import asyncio
 import inspect
-from collections.abc import Callable, Coroutine, Iterator
-from typing import Any, Self, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, Self
 
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import Response
-from starlette.routing import Route
+from starlette.responses import JSONResponse, Response
+from starlette.routing import Route, WebSocketRoute
 from starlette.types import Receive, Scope, Send
+from starlette.websockets import WebSocket
 
 from core.config import config
 
+from .limiter import RateLimit, Store
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    from types_.limits import ExemptCallable, LimitDecorator, RateLimitData, ResponseType, T_LimitDecorator
 
 __all__ = (
     "route",
@@ -35,28 +45,58 @@ __all__ = (
     "WebsocketSubscriptions",
     "WebsocketNotificationTypes",
     "config",
+    "limit",
 )
-
-ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
 
 class _Route:
     def __init__(self, **kwargs: Any) -> None:
         self._path: str = kwargs["path"]
-        self._coro: Callable[[Any, Request], ResponseType] = kwargs["coro"]
+        self._coro: Callable[[Any, Request | WebSocket], ResponseType] = kwargs["coro"]
         self._methods: list[str] = kwargs["methods"]
         self._prefix: bool = kwargs["prefix"]
+        self._limits: RateLimitData = kwargs.get("limits", {})
+        self._is_websocket: bool = kwargs.get("websocket", False)
 
         self._view: View | None = None
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        request = Request(scope, receive, send)
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> Response | None:
+        request: Request | WebSocket = (
+            WebSocket(scope, receive, send) if scope["type"] == "websocket" else Request(scope, receive, send)
+        )
+
+        forwarded: str | None = request.headers.get("X-Forwarded-For", None)
+        ip: str = forwarded.split(",")[0] if forwarded else request.client.host  # type: ignore
+
+        exempt: ExemptCallable = self._limits.get("exempt", None)
+        if exempt is not None and await exempt(request):
+            pass
+
+        elif self._limits and ip not in ("127.0.0.1", "::1"):
+            limit: RateLimit = RateLimit(self._limits["rate"], self._limits["per"])  # TODO: Buckets...
+            key: str = f"{ip}@{self._path}"
+
+            if retry := Store.update(key, limit):
+                response = JSONResponse(
+                    {"error": "You are requesting too fast. Slow down!"},
+                    status_code=429,
+                    headers={"Retry-After": str(retry)},
+                )
+                await response(scope, receive, send)
+                return
+
+        if isinstance(request, WebSocket):
+            return await self._coro(self._view, request)
 
         response = await self._coro(self._view, request)
+        assert response is not None
+
         await response(scope, receive, send)
 
 
-def route(path: str, /, *, methods: list[str] = ["GET"], prefix: bool = True) -> Callable[..., _Route]:
+def route(
+    path: str, /, *, methods: list[str] = ["GET"], prefix: bool = True, websocket: bool = False
+) -> Callable[..., _Route]:
     """Decorator which allows a coroutine to be turned into a `starlette.routing.Route` inside a `core.View`.
 
     Parameters
@@ -77,7 +117,41 @@ def route(path: str, /, *, methods: list[str] = ["GET"], prefix: bool = True) ->
         if coro.__name__.lower() in disallowed:
             raise ValueError(f"Route callback function must not be named any: {', '.join(disallowed)}")
 
-        return _Route(path=path, coro=coro, methods=methods, prefix=prefix)
+        limits: RateLimitData = getattr(coro, "__limits__", {})  # type: ignore
+        return _Route(path=path, coro=coro, methods=methods, prefix=prefix, limits=limits, websocket=websocket)
+
+    return decorator
+
+
+def limit(
+    rate: int, per: int, *, bucket: Literal["ip", "user"] = "ip", exempt: ExemptCallable = None
+) -> T_LimitDecorator:
+    """Decorator which allows a Route to have a rate limit.
+
+    Rate limits use the GCRA algorithm and are stored in memory.
+
+    Parameters
+    ----------
+    rate: int
+        The number of requests allowed per period.
+    per: int
+        The period in seconds.
+    bucket: Literal["ip", "user"]
+        The bucket to use for rate limiting. Defaults to "ip".
+    exempt: Optional[ExemptCallable]
+        An awaitable which takes a `starlette.requests.Request` and returns a boolean. If this returns True, the rate
+        limit is not applied. Defaults to None.
+    """
+
+    def decorator(coro: Callable[[Any, Request], ResponseType] | _Route) -> LimitDecorator:
+        limits: RateLimitData = {"rate": rate, "per": per, "bucket": bucket, "exempt": exempt}
+
+        if isinstance(coro, _Route):
+            coro._limits = limits
+        else:
+            setattr(coro, "__limits__", limits)
+
+        return coro
 
     return decorator
 
@@ -105,7 +179,7 @@ class View:
     Calling `list()` on a view instance will return a list of the `starlette.routing.Route`'s in this instance.
     """
 
-    __routes__: list[Route]
+    __routes__: list[Route | WebSocketRoute]
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         self = super().__new__(cls)
@@ -126,9 +200,15 @@ class View:
                 # Due to the way Starlette works, this allows us to have schema documentation...
                 setattr(member, method, member._coro)
 
-            self.__routes__.append(
-                Route(path=path, endpoint=member, methods=member._methods, name=f"{name}.{member._coro.__name__}")
-            )
+            new: WebSocketRoute | Route
+
+            if member._is_websocket:
+                new = WebSocketRoute(path=path, endpoint=member, name=f"{name}.{member._coro.__name__}")
+            else:
+                new = Route(path=path, endpoint=member, methods=member._methods, name=f"{name}.{member._coro.__name__}")
+
+            new.limits = getattr(member, "_limits", {})  # type: ignore
+            self.__routes__.append(new)
 
         return self
 
@@ -139,13 +219,13 @@ class View:
     def __repr__(self) -> str:
         return f"View: name={self.__class__.__name__}, routes={self.__routes__}"
 
-    def __getitem__(self, index: int) -> Route:
+    def __getitem__(self, index: int) -> Route | WebSocketRoute:
         return self.__routes__[index]
 
     def __len__(self) -> int:
         return len(self.__routes__)
 
-    def __iter__(self) -> Iterator[Route]:
+    def __iter__(self) -> Iterator[Route | WebSocketRoute]:
         return iter(self.__routes__)
 
     def __eq__(self, other: Any) -> bool:
@@ -203,8 +283,13 @@ class Application(Starlette):
 
         for route_ in view:
             path = f"/{self._prefix.lstrip('/')}{route_.path}" if self._prefix else route_.path
-            new = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)  # type: ignore
 
+            if isinstance(route_, WebSocketRoute):
+                new = WebSocketRoute(path, endpoint=route_.endpoint, name=route_.name)
+            else:
+                new = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)  # type: ignore
+
+            new.limits = route_.limits  # type: ignore
             self.router.routes.append(new)
 
         self._views.append(view)
@@ -227,7 +312,7 @@ class WebsocketOPCodes:
 
 
 class WebsocketSubscriptions:
-    ...
+    EVENTSUB: str = "eventsub"
 
 
 class WebsocketNotificationTypes:
