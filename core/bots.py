@@ -180,6 +180,8 @@ class DiscordBot(commands.Bot):
 
 
 class TwitchBot(tcommands.Bot):
+    server: api.Server
+    
     def __init__(self, *, dbot: DiscordBot, database: Database) -> None:
         self.dbot = dbot
         self.database = database

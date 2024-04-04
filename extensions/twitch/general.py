@@ -27,7 +27,7 @@ import core
 from core.constants import TIMEZONES
 
 if TYPE_CHECKING:
-    from api import FirstRedeemModel
+    from api import FirstRedeemModel, Server
 
 STREAM_REFS_CHANNEL: int = core.config["GENERAL"]["stream_refs_id"]
 
@@ -295,10 +295,12 @@ class General(commands.Cog):
 
     @commands.Cog.event()  # type: ignore
     async def event_api_first_redeem(self, event: dict[str, Any]) -> None:
+        """ When user redeems first, send message in chat with NEWEST streak."""
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
         if not channel:
             return
-
+        
+        # creates the newest streak count
         all_redeems = await self.bot.database.fetch_redeems()
         redeemer_twitch_id = int(event["user_id"])
         count = 0
@@ -307,7 +309,7 @@ class General(commands.Cog):
             if redeemer_twitch_id != redeem.twitch_id:
                 break
             count += 1
-
+        await self.bot.dbot.server.dispatch_htmx("first_redeem", data={"username": event["user_name"], "count": count})
         await channel.send(f"{event['user_name']} got first {count} times in a row! PogChamp")
 
     @routines.routine(seconds=60)
@@ -326,6 +328,12 @@ class General(commands.Cog):
                 logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
 
                 await channel.send(f"it's midnight, the {day_str} in {timezone}!")
+    
+    @commands.command()
+    async def random(self, ctx: commands.Context) -> None:
+        # This is just for testing dispatching an event you can do it from anywhere
+        # The server is just the starlette server...
+        await self.bot.dbot.server.dispatch_htmx("random_event", data={})
 
 
 def prepare(bot: core.TwitchBot) -> None:

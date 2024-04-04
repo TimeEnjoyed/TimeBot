@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Random Number</title>
+
+    <!-- PACKAGES -->
+    <script src="/static/packages/htmx.min.js"></script>
+</head>
+<html lang="en">
+    <body hx-sse="connect:/sse/redeems/first">
+        <div hx-trigger="load, sse:first_redeem" hx-get="/redeems/first/data"></div>
+    </body>
+</html>

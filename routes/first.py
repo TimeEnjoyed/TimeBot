@@ -12,16 +12,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+from __future__ import annotations
 import logging
+import twitchio
 from typing import TYPE_CHECKING, Any
 
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, FileResponse
 
 from api import View, route
+import core
 
 if TYPE_CHECKING:
-    
+    from starlette.requests import Request
+    from starlette.responses import Response
     from api import Server
 
 # this api endpoint just returns the longest streak (json) of a particular twitch user
@@ -32,31 +35,51 @@ class Redeems(View):
     def __init__(self, app: Server) -> None:
         self.app = app
     
-    # @route("/first", methods=["GET"])
-    # async def get_first_streak(self, )
-        #  {"name": "user_name_here", "count": 214123452145}
-       """ <!DOCTYPE html>
-<html lang="en">
+    #  (3/3 component- send new data)
+    @route("/first/data", methods=["GET"])
+    async def get_first_streak_data(self, request: Request) -> Response:
+        all_redeems = await self.app.database.fetch_redeems()
+        redeemer_twitch_id = all_redeems[0].twitch_id
+        count = 0
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        user_list: list[twitchio.User] = await self.app.tbot.fetch_users(ids=[redeemer_twitch_id])
+        username: str = user_list[0].display_name
 
-    <title>OBS - "First" Redeem Page</title>
+        for redeem in all_redeems:
+            if redeemer_twitch_id != redeem.twitch_id:
+                break
+            count += 1
 
-    <!-- PACKAGES -->
-    <script src="/static/packages/htmx.min.js"></script>
-    <!-- SCRIPTS -->
-    <script src="/static/scripts.js"></script>
-    <!-- STYLES -->
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-</head>
-
-<body hx-sse="connect:/sse/player">
-  <div></div>
-</body>
-
-</html>"""
+        html_data: str = f"""
+            <div>
+                1st Streak: {username} ({count})!
+            </div>
+        """
+        return HTMLResponse(html_data)
     
+    # this path is redeems/first
+    @route("/first", methods=["GET"]) # (2/3 component - displays the html page)
+    async def get_first_streak(self, request: Request) -> Response:
+        """this loads the index.html file at this path."""
+
+        # return HTMLResponse(thing)
+        return FileResponse("web/first-redeem/index.html")
+    
+
+
+    @route("/random/data", methods=["GET"])
+    async def random_html(self, request: Request) -> Response: 
+        import random
+        num: int = random.randint(1, 1000000)
+    
+        html: str = f"""
+        <div>
+            Radnom number: {num}!
+        </div>
+        """
+        
+        return HTMLResponse(html)
+    
+    @route("/random", methods=["GET"])
+    async def random(self, request: Request) -> Response:
+        return FileResponse("web/random/index.html")

@@ -6,3 +6,4 @@ from .player_dashboard import PlayerDashboard as PlayerDashboardView
 from .quotes import Quotes as QuotesView
 from .sse import SSE as SSEView
 from .websockets import Websockets as WebsocketsView
+from .first import Redeems as RedeemsView

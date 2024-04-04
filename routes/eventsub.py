@@ -179,9 +179,9 @@ class EventSub(View):
 
         await self.app.database.add_redeem(twitch_id)
 
-        # bookmark
+        # built into twitchio; dispatches event via tbot so it can be listened to
         self.app.tbot.run_event("api_first_redeem", event)
-        logger.info("redeem event recevied")
+        logger.info("first-redeem event recevied by twitch bot")
 
     async def raid_event(self, from_id: str, viewers: int) -> None:
         self.app.tbot.run_event("time_raid", from_id, viewers)
