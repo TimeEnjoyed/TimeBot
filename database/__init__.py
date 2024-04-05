@@ -138,6 +138,7 @@ class Database:
 
             assert row
             return UserModel(record=row)
+
     async def upsert_user_twitch(self, *, twitch_id: int, points: int = 0) -> UserModel:
         assert self.pool
 

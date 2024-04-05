@@ -13,28 +13,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from __future__ import annotations
+
 import logging
-import twitchio
 from typing import TYPE_CHECKING, Any
 
-from starlette.responses import HTMLResponse, FileResponse
+import twitchio
+from starlette.responses import FileResponse, HTMLResponse
 
-from api import View, route
 import core
+from api import View, route
+
 
 if TYPE_CHECKING:
     from starlette.requests import Request
     from starlette.responses import Response
+
     from api import Server
 
 # this api endpoint just returns the longest streak (json) of a particular twitch user
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+
 class Redeems(View):
     def __init__(self, app: Server) -> None:
         self.app = app
-    
+
     #  (3/3 component- send new data)
     @route("/first/data", methods=["GET"])
     async def get_first_streak_data(self, request: Request) -> Response:
@@ -56,30 +60,29 @@ class Redeems(View):
             </span>
         """
         return HTMLResponse(html_data)
-    
+
     # this path is redeems/first
-    @route("/first", methods=["GET"]) # (2/3 component - displays the html page)
+    @route("/first", methods=["GET"])  # (2/3 component - displays the html page)
     async def get_first_streak(self, request: Request) -> Response:
         """this loads the index.html file at this path."""
 
         # return HTMLResponse(thing)
         return FileResponse("web/first-redeem/index.html")
-    
-
 
     @route("/random/data", methods=["GET"])
-    async def random_html(self, request: Request) -> Response: 
+    async def random_html(self, request: Request) -> Response:
         import random
+
         num: int = random.randint(1, 1000000)
-    
+
         html: str = f"""
         <div>
             Radnom number: {num}!
         </div>
         """
-        
+
         return HTMLResponse(html)
-    
+
     @route("/random", methods=["GET"])
     async def random(self, request: Request) -> Response:
         return FileResponse("web/random/index.html")

@@ -26,6 +26,7 @@ from twitchio.ext import commands, routines
 import core
 from core.constants import TIMEZONES
 
+
 if TYPE_CHECKING:
     from api import FirstRedeemModel, Server
 
@@ -295,11 +296,11 @@ class General(commands.Cog):
 
     @commands.Cog.event()  # type: ignore
     async def event_api_first_redeem(self, event: dict[str, Any]) -> None:
-        """ When user redeems first, send message in chat with NEWEST streak."""
+        """When user redeems first, send message in chat with NEWEST streak."""
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
         if not channel:
             return
-        
+
         # creates the newest streak count
         all_redeems = await self.bot.database.fetch_redeems()
         redeemer_twitch_id = int(event["user_id"])
@@ -328,7 +329,7 @@ class General(commands.Cog):
                 logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
 
                 await channel.send(f"it's midnight, the {day_str} in {timezone}!")
-    
+
     @commands.command()
     async def random(self, ctx: commands.Context) -> None:
         # This is just for testing dispatching an event you can do it from anywhere

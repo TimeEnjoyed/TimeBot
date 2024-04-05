@@ -31,7 +31,7 @@ from api import View, limit, route
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-    from starlette.requests import Request
+
     from api import Server
 
 
@@ -47,7 +47,6 @@ class SSE(View):
     @route("/player", methods=["GET"])
     @limit(core.config["LIMITS"]["sse_player"]["rate"], core.config["LIMITS"]["sse_player"]["per"])
     async def music_player_sse(self, request: Request) -> EventSourceResponse | Response:
-
         # listens for the event source
         forwarded: str | None = request.headers.get("X-Forwarded-For", None)
         ip: str = forwarded.split(",")[0] if forwarded else request.client.host  # type: ignore
@@ -90,17 +89,15 @@ class SSE(View):
 
         return EventSourceResponse(publisher())
 
-
     @route("/redeems/first", methods=["GET"])
     async def first_event_sse(self, request: Request) -> EventSourceResponse:
         id_: str = secrets.token_urlsafe(18)
         queue: asyncio.Queue = asyncio.Queue()
         self.app.htmx_listeners[id_] = queue
-    
-        logger.info('EventSource "%s" connection opened for first_event.')
-    
-        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
 
+        logger.info('EventSource "%s" connection opened for first_event.')
+
+        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
             try:
                 while True:
                     data: dict[str, Any] = await queue.get()
@@ -114,27 +111,24 @@ class SSE(View):
                         username = data[data["username"]]
                         count = data[data["count"]]
                         yield {"event": event, "username": username, "count": count}
-                    
+
             except asyncio.CancelledError as e:
                 logger.info('EventSource "%s" connection closed: %s', id_, e)
-                
+
                 del self.app.htmx_listeners[id_]
                 raise e
-    
+
         return EventSourceResponse(publisher())
-
-
 
     @route("/random", methods=["GET"])
     async def random_event_sse(self, request: Request) -> EventSourceResponse:
         id_: str = secrets.token_urlsafe(18)
         queue: asyncio.Queue = asyncio.Queue()
         self.app.htmx_listeners[id_] = queue
-    
-        logger.info('EventSource "%s" connection opened for random_event.', id_)
-    
-        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
 
+        logger.info('EventSource "%s" connection opened for random_event.', id_)
+
+        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
             try:
                 while True:
                     data: dict[str, Any] = await queue.get()
@@ -146,12 +140,11 @@ class SSE(View):
 
                     if event == "random_event":
                         yield {"event": event, "data": ""}
-                    
+
             except asyncio.CancelledError as e:
                 logger.info('EventSource "%s" connection closed: %s', id_, e)
-                
+
                 del self.app.htmx_listeners[id_]
                 raise e
-    
-        return EventSourceResponse(publisher())
 
+        return EventSourceResponse(publisher())
