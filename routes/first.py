@@ -51,9 +51,9 @@ class Redeems(View):
             count += 1
 
         html_data: str = f"""
-            <div>
-                1st Streak: {username} ({count})!
-            </div>
+            <span style="color: white; background-color: rgba(0, 0, 0, 0.3); font-size: 20px; font-decoration: bold; font-family: Montserrat, sans-serif; padding: 2px 5px 2px 5px; border-radius: 8px;">
+                1st Streak: {username} ({count}x)!
+            </span>
         """
         return HTMLResponse(html_data)
     
