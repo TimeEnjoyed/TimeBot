@@ -310,7 +310,9 @@ class General(commands.Cog):
             if redeemer_twitch_id != redeem.twitch_id:
                 break
             count += 1
-        await self.bot.dbot.server.dispatch_htmx("first_redeem", data={"username": event["user_name"], "count": count})
+
+        # step 6: first redeem event
+        await self.bot.dbot.server.dispatch_htmx("first_redeem", data={})
         await channel.send(f"{event['user_name']} got first {count} times in a row! PogChamp")
 
     @routines.routine(seconds=60)

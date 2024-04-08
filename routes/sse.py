@@ -108,9 +108,7 @@ class SSE(View):
                         continue
 
                     if event == "first_redeem":
-                        username = data[data["username"]]
-                        count = data[data["count"]]
-                        yield {"event": event, "username": username, "count": count}
+                        yield {"event": event, "data": ""}
 
             except asyncio.CancelledError as e:
                 logger.info('EventSource "%s" connection closed: %s', id_, e)
