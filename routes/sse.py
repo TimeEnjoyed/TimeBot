@@ -101,7 +101,7 @@ class SSE(View):
             try:
                 while True:
                     data: dict[str, Any] = await queue.get()
-                    event: str | None = data.get("event", None)
+                    event: str | None = data.get("event")
 
                     if not event:
                         logger.warning('EventSource "%s" received invalid event: %s', id_, event)
@@ -130,7 +130,7 @@ class SSE(View):
             try:
                 while True:
                     data: dict[str, Any] = await queue.get()
-                    event: str | None = data.get("event", None)
+                    event: str | None = data.get("event")
 
                     if not event:
                         logger.warning('EventSource "%s" received invalid event: %s', id_, event)
