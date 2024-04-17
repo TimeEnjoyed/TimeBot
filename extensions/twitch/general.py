@@ -171,7 +171,6 @@ class General(commands.Cog):
 
         await ctx.reply(f"There are {total} {mbti_type} types in the server!")
 
-
     @commands.command()
     async def first(self, ctx: commands.Context, name: str) -> None:
         channel: twitchio.Channel | None = self.bot.get_channel("timeenjoyed")
