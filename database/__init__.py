@@ -201,19 +201,6 @@ class Database:
 
         return row
 
-    async def fetch_points(self, twitch_id: int) -> int:
-        assert self.pool
-
-        query: str = """
-        SELECT points FROM users WHERE twitch_id = $1
-        """
-
-        async with self.pool.acquire() as connection:
-            row: asyncpg.Record | None = await connection.fetchrow(query, twitch_id)
-
-        assert row
-        return row["points"]
-
     async def add_redeem(self, twitch_id: int) -> FirstRedeemModel:
         # step 5 of first_redeem
         assert self.pool
