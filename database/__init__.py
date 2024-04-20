@@ -139,7 +139,6 @@ class Database:
             assert row
             return UserModel(record=row)
 
-    
     async def add_quote(
         self, content: str, *, added_by: str | int, source: str, user: str | int | None = None
     ) -> asyncpg.Record:
