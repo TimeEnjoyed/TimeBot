@@ -139,33 +139,7 @@ class Database:
             assert row
             return UserModel(record=row)
 
-    async def upsert_user_twitch(self, *, twitch_id: int, points: int = 0) -> UserModel:
-        assert self.pool
-
-        uid: int = generate_id()
-        token: str = generate_token(uid)
-
-        # if the user doesn't exist in the db... and you add neg. points, we try to throw
-        # if points becomes less than zero
-        """
-        SET points = users.points
-        WHERE points = users.points
-        """
-
-        query: str = """
-        INSERT INTO users (uid, twitch_id, token, points)
-        VALUES ($1, $2, $3, GREATEST($4, 0))
-        ON CONFLICT (twitch_id) DO UPDATE
-        SET points = GREATEST(users.points + $4, 0)
-        RETURNING *
-        """
-
-        async with self.pool.acquire() as connection:
-            row = await connection.fetchrow(query, uid, twitch_id, token, points)
-
-        assert row
-        return UserModel(record=row)
-
+    
     async def add_quote(
         self, content: str, *, added_by: str | int, source: str, user: str | int | None = None
     ) -> asyncpg.Record:

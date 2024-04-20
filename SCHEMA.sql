@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
     moderator BOOLEAN NOT NULL DEFAULT false,
     token TEXT UNIQUE NOT NULL,
     created TIMESTAMP DEFAULT (now() at time zone 'utc'),
-    points BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS state (
