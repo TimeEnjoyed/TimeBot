@@ -209,9 +209,6 @@ class General(commands.Cog):
                     all_streaks.append(curr_list)
 
         users_streaks: list[int] = [len(streak) for streak in all_streaks if user_id in streak]
-        # for streak in all_streaks:
-        #     if user_id in streak:
-        #         users_streaks.append(len(streak))  # add length of streak to the user's list of streak counts
 
         if len(users_streaks) < 1:
             await channel.send(f"{name} hasn't gotten first before :,(")
@@ -257,12 +254,6 @@ class General(commands.Cog):
                 logger.debug(f"The midnight Routine has detected it is {current} in {tz}")
 
                 await channel.send(f"it's midnight, the {day_str} in {timezone}!")
-
-    @commands.command()
-    async def random(self, ctx: commands.Context) -> None:
-        # This is just for testing dispatching an event you can do it from anywhere
-        # The server is just the starlette server...
-        await self.bot.dbot.server.dispatch_htmx("random_event", data={})
 
 
 def prepare(bot: core.TwitchBot) -> None:
