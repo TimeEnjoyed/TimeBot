@@ -110,7 +110,6 @@ class EventSub(View):
         subscription: dict[str, Any] = data["subscription"]
         type_: str = subscription["type"]
         event: dict[str, Any] = data["event"]
-        event_id: str = data["event"]["id"]
 
         for wsuuid, websocket in self.app._websocket_listeners.items():
             if "eventsub" not in websocket["subscriptions"]:
