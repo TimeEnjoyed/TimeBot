@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     twitch_id BIGINT UNIQUE,
     moderator BOOLEAN NOT NULL DEFAULT false,
     token TEXT UNIQUE NOT NULL,
-    created TIMESTAMP DEFAULT (now() at time zone 'utc'),
+    created TIMESTAMP DEFAULT (now() at time zone 'utc')
 );
 
 CREATE TABLE IF NOT EXISTS state (
