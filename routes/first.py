@@ -68,21 +68,3 @@ class Redeems(View):
 
         # return HTMLResponse(thing)
         return FileResponse("web/first-redeem/index.html")
-
-    @route("/random/data", methods=["GET"])
-    async def random_html(self, request: Request) -> Response:
-        import random
-
-        num: int = random.randint(1, 1000000)
-
-        html: str = f"""
-        <div>
-            Radnom number: {num}!
-        </div>
-        """
-
-        return HTMLResponse(html)
-
-    @route("/random", methods=["GET"])
-    async def random(self, request: Request) -> Response:
-        return FileResponse("web/random/index.html")

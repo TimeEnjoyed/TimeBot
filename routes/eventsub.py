@@ -135,7 +135,6 @@ class EventSub(View):
         elif type_ == "channel.channel_points_custom_reward_redemption.add":
             # step 1 of first_redeem
             logger.info("EventSub Redemption received.")
-            print(f"================================the event id is: {event_id}")
             await self.redeem_event(data)
 
         elif type_ == "channel.raid":
