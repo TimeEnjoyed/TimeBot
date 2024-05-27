@@ -1,8 +1,8 @@
 [DISCORD]
 prefix = ""
 token = ""
-client_id = ""
-client_secret = ""
+client_id = ""  # FILL !!
+client_secret = ""  # FILL !!
 
 [TWITCH]
 prefix = ""
@@ -17,7 +17,7 @@ eventsub_secret = ""
 prefix = ""
 port = 2536
 public_host = "http://localhost:2536/"
-secret = ""
+secret = ""  # FILL !! # Random string... import secrets; print(secrets.token_urlsafe(128))
 max_age = 604800
 
 [DATABASE]
@@ -61,3 +61,6 @@ player_meta = {"rate" = 30, "per" = 30}
 player_likes = {"rate" = 5, "per" = 15}
 player_json = {"rate" = 5, "per" = 5}
 twitch_auth = {"rate" = 5, "per" = 600}
+
+[GPT]
+token = ""

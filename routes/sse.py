@@ -21,6 +21,7 @@ import secrets
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from sse_starlette.sse import EventSourceResponse
+from starlette.authentication import requires
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -30,8 +31,6 @@ from api import View, limit, route
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-
-    from starlette.requests import Request
 
     from api import Server
 
@@ -48,6 +47,7 @@ class SSE(View):
     @route("/player", methods=["GET"])
     @limit(core.config["LIMITS"]["sse_player"]["rate"], core.config["LIMITS"]["sse_player"]["per"])
     async def music_player_sse(self, request: Request) -> EventSourceResponse | Response:
+        # listens for the event source
         forwarded: str | None = request.headers.get("X-Forwarded-For", None)
         ip: str = forwarded.split(",")[0] if forwarded else request.client.host  # type: ignore
 
@@ -80,6 +80,35 @@ class SSE(View):
                         yield {"event": event, "data": ""}
                     else:
                         logger.warning('EventSource "%s" received invalid event: %s', id_, event)
+
+            except asyncio.CancelledError as e:
+                logger.info('EventSource "%s" connection closed: %s', id_, e)
+
+                del self.app.htmx_listeners[id_]
+                raise e
+
+        return EventSourceResponse(publisher())
+
+    @route("/redeems/first", methods=["GET"])
+    async def first_event_sse(self, request: Request) -> EventSourceResponse:
+        id_: str = secrets.token_urlsafe(18)
+        queue: asyncio.Queue = asyncio.Queue()
+        self.app.htmx_listeners[id_] = queue
+
+        logger.info('EventSource "%s" connection opened for first_event.')
+
+        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
+            try:
+                while True:
+                    data: dict[str, Any] = await queue.get()
+                    event: str | None = data.get("event")
+
+                    if not event:
+                        logger.warning('EventSource "%s" received invalid event: %s', id_, event)
+                        continue
+
+                    if event == "first_redeem":
+                        yield {"event": event, "data": ""}
 
             except asyncio.CancelledError as e:
                 logger.info('EventSource "%s" connection closed: %s', id_, e)

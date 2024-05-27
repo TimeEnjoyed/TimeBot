@@ -1,4 +1,4 @@
--- Active: 1699682544906@@localhost@5432@timeenjoyed
+-- Active: 1703653682760@@127.0.0.1@5432@timebot_test
 CREATE TABLE IF NOT EXISTS users (
     uid BIGINT PRIMARY KEY,
     discord_id BIGINT UNIQUE,
@@ -22,3 +22,8 @@ CREATE TABLE IF NOT EXISTS quotes (
     source TEXT NOT NULL,
     created TIMESTAMP DEFAULT (now() at time zone 'utc')
 );
+
+CREATE TABLE IF NOT EXISTS first_redeem (
+    twitch_id BIGINT NOT NULL,
+    timestamp TIMESTAMP DEFAULT (now() at time zone 'utc')
+)

@@ -145,7 +145,8 @@ class PlayerDashboard(View):
         return RedirectResponse(url="/playerdashboard/login")
 
     @route("/oauth/twitch", methods=["GET"])
-    async def oauth_twitch(self, request: Request) -> Response: ...
+    async def oauth_twitch(self, request: Request) -> Response:
+        ...
 
     @route("/oauth/discord", methods=["GET"])
     @limit(core.config["LIMITS"]["player_oauth"]["rate"], core.config["LIMITS"]["player_oauth"]["per"])
@@ -350,7 +351,7 @@ class PlayerDashboard(View):
                     self.liked[uid] = []
 
                 if track.identifier in self.liked[uid]:
-                    fave = """<span class="material-symbols-rounded liked">favorite</span>"""
+                    fave: str = """<span class="material-symbols-rounded liked">favorite</span>"""
                 else:
                     fave = f"""<span class="material-symbols-rounded notLiked" hx-post="/playerdashboard/like?identifier={urllib.parse.quote(track.identifier)}&uri={urllib.parse.quote(str(track.uri))}" hx-swap="outerHTML">favorite</span>"""
 

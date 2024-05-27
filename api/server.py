@@ -59,6 +59,7 @@ class Server(Application):
             PlayerDashboardView(self),
             SSEView(self),
             WebsocketsView(self),
+            RedeemsView(self),
         ]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),

@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import pathlib
+import random
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
@@ -179,6 +180,8 @@ class DiscordBot(commands.Bot):
 
 
 class TwitchBot(tcommands.Bot):
+    server: api.Server
+
     def __init__(self, *, dbot: DiscordBot, database: Database) -> None:
         self.dbot = dbot
         self.database = database

@@ -132,6 +132,7 @@ class EventSub(View):
             await self.online_event(event["broadcaster_user_login"], event["broadcaster_user_id"])
 
         elif type_ == "channel.channel_points_custom_reward_redemption.add":
+            # step 1 of first_redeem
             logger.info("EventSub Redemption received.")
             await self.redeem_event(data)
 
@@ -152,17 +153,33 @@ class EventSub(View):
             await webhook.send(f"<@&{mention}> - **{stream}** is live: [Watch](https://twitch.tv/{stream})")
 
     async def redeem_event(self, data: dict[str, Any]) -> None:
+        # step 2 of first_redeem
         event: dict[str, Any] = data["event"]
-
-        if event["status"].lower() != "unfulfilled":
-            return
-
         reward: dict[str, Any] = event["reward"]
-        if str(reward["title"]).lower().rstrip(" ") != "play this song":
+
+        if str(reward["title"]).lower().rstrip(" ") == "play this song":
+            await self.redeem_song(event)
+
+        elif str(reward["title"]).lower().rstrip(" ") == "first":
+            # step 3 of first_redeem
+            await self.redeem_first(event)
+
+    async def redeem_song(self, event: dict[str, Any]) -> None:
+        if event["status"].lower() != "unfulfilled":
             return
 
         self.app.tbot.run_event("api_request_song", event)
         logger.info("EventSub dispatched event for <Play this song> to <api_request_song>.")
+
+    async def redeem_first(self, event: dict[str, Any]) -> None:
+        # step 4 of first_redeem
+        twitch_id: int = int(event["user_id"])
+
+        await self.app.database.add_redeem(twitch_id)
+
+        # built into twitchio; dispatches event via tbot so it can be listened to
+        self.app.tbot.run_event("api_first_redeem", event)
+        logger.info("first-redeem event recevied by twitch bot")
 
     async def raid_event(self, from_id: str, viewers: int) -> None:
         self.app.tbot.run_event("time_raid", from_id, viewers)

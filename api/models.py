@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 import asyncpg
@@ -25,7 +25,15 @@ if TYPE_CHECKING:
 __all__ = ("UserModel",)
 
 
-class UserModel:
+class BaseModel(ABC):
+    """Base model for all models, to serialize data (the dict) for API consumption."""
+
+    @abstractmethod
+    def as_dict(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+
+class UserModel(BaseModel):
     def __init__(self, record: asyncpg.Record) -> None:
         self.uid: int = record["uid"]
         self.discord_id: int | None = record.get("discord_id", None)
@@ -42,4 +50,16 @@ class UserModel:
             "moderator": self.moderator,
             "token": self.token,
             "created": self.created.isoformat(),
+        }
+
+
+class FirstRedeemModel(BaseModel):
+    def __init__(self, record: asyncpg.Record) -> None:
+        self.twitch_id: int = record["twitch_id"]
+        self.timestamp: datetime.datetime = record["timestamp"]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "twitch_id": self.twitch_id,
+            "timestamp": self.timestamp.isoformat(),
         }
