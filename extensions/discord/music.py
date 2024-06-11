@@ -235,6 +235,10 @@ class Music(commands.Cog):
     async def on_wavelink_websocket_closed(self, payload: wavelink.WebsocketClosedEventPayload) -> None:
         await self.bot.server.dispatch_htmx("player_closed", data={"player": payload.player})
 
+    @commands.Cog.listener()
+    async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
+        await player.disconnect()
+
     async def update_redemption(self, data: dict[str, Any], *, status: Literal["CANCELED", "FULFILLED"]) -> None:
         # Temp setting for testing purposes...
         # status = "CANCELED"
@@ -572,12 +576,13 @@ class Music(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(kick_members=True)
     async def nightcore(self, ctx: commands.Context) -> None:
+        """Apply the nightcore filter to the player."""
         player: core.Player = cast(core.Player, ctx.voice_client)
         if not player:
             return
 
         filters: wavelink.Filters = wavelink.Filters()
-        filters.timescale.set(pitch=1.2, speed=1.2, rate=1)
+        filters.timescale.set(pitch=1.3, speed=1.3, rate=1)
 
         await player.set_filters(filters)
         await ctx.message.add_reaction("\u2705")
@@ -586,12 +591,26 @@ class Music(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(kick_members=True)
     async def no_filter(self, ctx: commands.Context) -> None:
+        """Display any current filters applied to the player."""
         player: core.Player = cast(core.Player, ctx.voice_client)
         if not player:
             return
 
         await player.set_filters()
         await ctx.message.add_reaction("\u2705")
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    async def current(self, ctx: commands.Context) -> None:
+        """Display the currently playing song."""
+        player: core.Player = cast(core.Player, ctx.voice_client)
+
+        if not player or not player.current:
+            await ctx.send("Not currently playing anything!")
+            return
+
+        message: str = f"Currently Playing: [{player.current.title}](<{player.current.uri}>)"
+        await ctx.send(message)
 
 
 async def setup(bot: core.DiscordBot) -> None:
