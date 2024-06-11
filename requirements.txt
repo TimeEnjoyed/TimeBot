@@ -4,7 +4,7 @@ starlette>=0.32.0
 asyncpg>=0.29.0
 asyncpg-stubs>=0.29.1
 uvicorn>=0.24.0
-wavelink>=3.0.0
+wavelink @ git+https://github.com/PythonistaGuild/Wavelink@main
 aiohttp>=3.7.4,<4
 redis>=5.0.1
 itsdangerous>=2.1.2
