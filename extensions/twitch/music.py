@@ -50,7 +50,7 @@ class Music(commands.Cog):
 
     @commands.command(aliases=["vol"])
     async def volume(self, ctx: commands.Context, *, value: str) -> None:
-        if not ctx.author.is_mod:  # type: ignore
+        if not ctx.author.is_vip and not ctx.author.is_mod:  # type: ignore
             return
 
         player: wavelink.Player | None
@@ -64,12 +64,13 @@ class Music(commands.Cog):
 
         volume: int
         value = value.replace(" ", "")
+        MAX: int = 40 if ctx.author.is_vip else 60  # type: ignore
 
         try:
             if value.startswith(("-", "+")):
-                volume = max(5, min(player.volume + int(value), 50))
+                volume = max(5, min(player.volume + int(value), MAX))
             else:
-                volume = max(5, min(int(value), 50))
+                volume = max(5, min(int(value), MAX))
         except ValueError:
             await ctx.reply("Invalid volume passed.")
             return
@@ -79,7 +80,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def like(self, ctx: commands.Context) -> None:
-        if not ctx.author.is_mod:  # type: ignore
+        if not ctx.author.is_vip and not ctx.author.is_mod:  # type: ignore
             return
 
         player: wavelink.Player | None

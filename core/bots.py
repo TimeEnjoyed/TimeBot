@@ -102,7 +102,7 @@ class DiscordBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         node: wavelink.Node = wavelink.Node(uri=config["WAVELINK"]["uri"], password=config["WAVELINK"]["password"])
-        await wavelink.Pool.connect(nodes=[node], client=self, cache_capacity=100)
+        await wavelink.Pool.connect(nodes=[node], client=self, cache_capacity=500)
 
         location = ("extensions/discord", "extensions.discord")
         extensions: list[str] = [f"{location[1]}.{f.stem}" for f in pathlib.Path(location[0]).glob("*.py")]

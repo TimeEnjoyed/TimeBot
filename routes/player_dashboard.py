@@ -145,8 +145,7 @@ class PlayerDashboard(View):
         return RedirectResponse(url="/playerdashboard/login")
 
     @route("/oauth/twitch", methods=["GET"])
-    async def oauth_twitch(self, request: Request) -> Response:
-        ...
+    async def oauth_twitch(self, request: Request) -> Response: ...
 
     @route("/oauth/discord", methods=["GET"])
     @limit(core.config["LIMITS"]["player_oauth"]["rate"], core.config["LIMITS"]["player_oauth"]["per"])
