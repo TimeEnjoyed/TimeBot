@@ -591,7 +591,7 @@ class Music(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(kick_members=True)
     async def no_filter(self, ctx: commands.Context) -> None:
-        """Display any current filters applied to the player."""
+        """Disable any current filters applied to the player."""
         player: core.Player = cast(core.Player, ctx.voice_client)
         if not player:
             return
