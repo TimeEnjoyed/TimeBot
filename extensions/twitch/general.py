@@ -160,6 +160,10 @@ class General(commands.Cog):
     async def keyboard2(self, ctx: commands.Context) -> None:
         await ctx.reply("Logitech MX Mechanical Mini Wireless Illuminated Keyboard, Clicky Switches")
 
+    @commands.command(name="discord")
+    async def discord_(self, ctx: commands.Context) -> None:
+        await ctx.send("https://discord.gg/timeenjoyed")
+
     @commands.command()
     async def count(self, ctx: commands.Context, mbti_type: str) -> None:
         data: dict[str, int] = self.bot.dbot.mbti_count()
