@@ -69,3 +69,7 @@ class Redeems(View):
 
         # return HTMLResponse(thing)
         return FileResponse("web/first-redeem/index.html")
+
+    @route("/heylisten", methods=["GET"])
+    async def get_hey_listen_redeem(self, request: Request) -> Response:
+        return FileResponse("web/hey-listen/index.html")

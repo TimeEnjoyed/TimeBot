@@ -259,6 +259,10 @@ class General(commands.Cog):
 
                 await channel.send(f"it's midnight, the {day_str} in {timezone}!")
 
+    @commands.Cog.event()  # type: ignore
+    async def event_api_hey_listen(self, event: dict[str, Any]) -> None:
+        await self.bot.dbot.server.dispatch_htmx("hey_listen_redeem", data={})
+
 
 def prepare(bot: core.TwitchBot) -> None:
     bot.add_cog(General(bot))

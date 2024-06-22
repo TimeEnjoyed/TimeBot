@@ -117,3 +117,32 @@ class SSE(View):
                 raise e
 
         return EventSourceResponse(publisher())
+
+    @route("/redeems/heylisten", methods=["GET"])
+    async def hey_listen_sse(self, request: Request) -> EventSourceResponse:
+        id_: str = secrets.token_urlsafe(18)
+        queue: asyncio.Queue = asyncio.Queue()
+        self.app.htmx_listeners[id_] = queue
+
+        logger.info('EventSource "%s" connection opened for hey_listen_event.')
+
+        async def publisher() -> AsyncGenerator[dict[str, Any], Any]:
+            try:
+                while True:
+                    data: dict[str, Any] = await queue.get()
+                    event: str | None = data.get("event")
+
+                    if not event:
+                        logger.warning('EventSource "%s" received invalid event: %s', id_, event)
+                        continue
+
+                    if event == "hey_listen_redeem":
+                        yield {"event": event, "data": ""}
+
+            except asyncio.CancelledError as e:
+                logger.info('EventSource "%s" connection closed: %s', id_, e)
+
+                del self.app.htmx_listeners[id_]
+                raise e
+
+        return EventSourceResponse(publisher())
