@@ -164,6 +164,9 @@ class EventSub(View):
             # step 3 of first_redeem
             await self.redeem_first(event)
 
+        elif str(reward["title"]).lower().rstrip(" ") == "hey listen!":
+            await self.redeem_hey_listen(event)
+
     async def redeem_song(self, event: dict[str, Any]) -> None:
         if event["status"].lower() != "unfulfilled":
             return
@@ -183,3 +186,6 @@ class EventSub(View):
 
     async def raid_event(self, from_id: str, viewers: int) -> None:
         self.app.tbot.run_event("time_raid", from_id, viewers)
+
+    async def redeem_hey_listen(self, event: dict[str, Any]) -> None:
+        self.app.tbot.run_event("api_hey_listen", event)
