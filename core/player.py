@@ -23,6 +23,8 @@ __all__ = ("Player",)
 
 
 class Player(wavelink.Player):
+    redeems: discord.TextChannel
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 

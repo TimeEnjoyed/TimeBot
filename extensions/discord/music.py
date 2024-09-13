@@ -411,7 +411,7 @@ class Music(commands.Cog):
         await player.add_approval(id_, {"id": id_, "data": data, "track": track})
 
         view: RequestView = RequestView(data=data, cog=self, player=player, track=track, request_id=id_)
-        view.message = await player.channel.send(embed=embed, view=view)
+        view.message = await player.redeems.send(embed=embed, view=view)  # type: ignore
 
     def run_elevated_checks(self, *, track: wavelink.Playable, player: core.Player) -> list[str]:
         flags: list[str] = []
@@ -490,6 +490,9 @@ class Music(commands.Cog):
                     reason="Stream Music Thread",
                 )
                 player.thread = thread
+
+        if not hasattr(player, "redeems"):
+            player.redeems = self.bot.get_channel(1284266455260594307)  # type: ignore
 
         await ctx.send("Successfully setup the stream player!")
 
