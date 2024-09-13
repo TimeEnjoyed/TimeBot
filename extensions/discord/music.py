@@ -158,8 +158,6 @@ class RequestView(discord.ui.View):
     async def cancel_no_refund(
         self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button
     ) -> None:
-        await interaction.response.defer()
-
         if self.actioned:
             return
 
