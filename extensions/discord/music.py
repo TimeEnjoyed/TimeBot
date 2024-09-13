@@ -42,6 +42,10 @@ class RejectionReasonModal(discord.ui.Modal, title="Song Request Deny"):
         label="Deny Reason", style=discord.TextStyle.paragraph, max_length=350, required=False
     )
 
+    async def on_submit(self, interaction: discord.Interaction[core.DiscordBot]) -> None:
+        await interaction.response.defer()
+        self.stop()
+
 
 class RequestView(discord.ui.View):
     message: discord.Message | discord.WebhookMessage
