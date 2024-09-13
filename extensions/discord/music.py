@@ -37,7 +37,7 @@ MAX_SONG_LEN: int = 360000  # 6 mins in Milliseconds...
 SONG_RANGE: tuple[int, int] = 90000, 600000  # 1 and half mins to 10 mins
 
 
-class RejectionReasonModal(discord.ui.Modal):
+class RejectionReasonModal(discord.ui.Modal, title="Song Request Deny"):
     reason = discord.ui.TextInput(
         label="Deny Reason", style=discord.TextStyle.paragraph, max_length=350, required=False
     )
