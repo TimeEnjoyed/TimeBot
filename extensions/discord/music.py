@@ -34,6 +34,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MAX_SONG_LEN: int = 360000  # 6 mins in Milliseconds...
+SONG_RANGE: tuple[int, int] = 90000, 600000  # 1 and half mins to 10 mins
+
+
+class RejectionReasonModal(discord.ui.Modal):
+    reason = discord.ui.TextInput(
+        label="Deny Reason", style=discord.TextStyle.paragraph, max_length=350, required=False
+    )
 
 
 class RequestView(discord.ui.View):
@@ -147,7 +154,35 @@ class RequestView(discord.ui.View):
 
         self.stop()
 
-    @discord.ui.button(label="Deny and Refund", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="Deny", style=discord.ButtonStyle.red)
+    async def cancel_no_refund(
+        self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button
+    ) -> None:
+        await interaction.response.defer()
+
+        if self.actioned:
+            return
+
+        self.actioned = True
+        await self.player.remove_approval(self.request_id)
+
+        modal = RejectionReasonModal()
+        await interaction.response.send_modal(RejectionReasonModal())
+        await modal.wait()
+
+        reason: str = modal.reason.value or "No reason provided."
+        channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
+        msg: str = f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator: {reason}"  # type: ignore
+
+        await channel.send(msg)
+        await self.cog.update_redemption(data=self.data, status="FULFILLED")
+
+        self._disable_all_buttons()
+        await self.message.edit(view=self)
+
+        self.stop()
+
+    @discord.ui.button(label="Refund", style=discord.ButtonStyle.grey)
     async def cancel(self, interaction: discord.Interaction[core.DiscordBot], button: discord.ui.Button) -> None:
         await interaction.response.defer()
 
@@ -160,7 +195,7 @@ class RequestView(discord.ui.View):
         channel: twitchio.Channel = interaction.client.tbot.get_channel("timeenjoyed")  # type: ignore
         await channel.send(
             (
-                f"@{self.track.twitch_user.name} - Your song request was rejected by a moderator."  # type: ignore
+                f"@{self.track.twitch_user.name} - Your song request could not be accepted at the moment. "  # type: ignore
                 "Your points were refunded."
             )
         )
@@ -313,7 +348,7 @@ class Music(commands.Cog):
             if chatter and chatter.is_mod:  # type: ignore
                 elevated = True
 
-            elif chatter and (chatter.is_subscriber or chatter.is_vip):  # type: ignore
+            elif chatter and chatter.is_vip:  # type: ignore
                 elevated = None
 
         try:
@@ -347,6 +382,12 @@ class Music(commands.Cog):
 
             return await self.update_redemption(data=data, status="FULFILLED")
 
+        if not SONG_RANGE[0] <= track.length <= SONG_RANGE[1]:
+            await channel.send(
+                f"@{user_login} - The song you requested is either too long '>10 min' or too short '<90 sec'"
+            )
+            return await self.update_redemption(data=data, status="CANCELED")
+
         embed: discord.Embed = discord.Embed(title="Stream Song Request", colour=0xFF888)
         embed.set_author(url=f"https://twitch.tv/{user_login}", name=user.display_name, icon_url=user.profile_image)
         embed.set_thumbnail(url=user.profile_image)
@@ -375,6 +416,9 @@ class Music(commands.Cog):
 
         if track.length > MAX_SONG_LEN:
             flags.append("LONG TRACK DURATION")
+
+        if track.length < SONG_RANGE[0]:
+            flags.append("VERY SHORT TRACK DURATION")
 
         if track in player.queue.history:  # type: ignore
             flags.append("TRACK PREVIOUSLY REDEEMED")
