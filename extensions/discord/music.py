@@ -42,7 +42,7 @@ class RejectionReasonModal(discord.ui.Modal, title="Song Request Deny"):
         label="Deny Reason", style=discord.TextStyle.paragraph, max_length=350, required=False
     )
 
-    async def on_submit(self, interaction: discord.Interaction[core.DiscordBot]) -> None:
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer()
         self.stop()
 
@@ -169,7 +169,7 @@ class RequestView(discord.ui.View):
         await self.player.remove_approval(self.request_id)
 
         modal = RejectionReasonModal()
-        await interaction.response.send_modal(RejectionReasonModal())
+        await interaction.response.send_modal(modal)
         await modal.wait()
 
         reason: str = modal.reason.value or "No reason provided."
