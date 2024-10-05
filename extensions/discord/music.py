@@ -34,7 +34,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MAX_SONG_LEN: int = 360000  # 6 mins in Milliseconds...
-SONG_RANGE: tuple[int, int] = 90000, 600000  # 1 and half mins to 10 mins
+SONG_RANGE: tuple[int, int] = (90000, 600000)  # 1 and half mins to 10 mins
 
 
 class RejectionReasonModal(discord.ui.Modal, title="Song Request Deny"):
@@ -384,7 +384,13 @@ class Music(commands.Cog):
 
             return await self.update_redemption(data=data, status="FULFILLED")
 
-        if not SONG_RANGE[0] <= track.length <= SONG_RANGE[1]:
+        if not track.length:
+            logger.warning("No track length in request: %s", track.length)
+            pass
+
+        elif not (SONG_RANGE[0] <= track.length <= SONG_RANGE[1]):
+            logger.info("Bad track length in deny request: %s", track.length)
+
             await channel.send(
                 f"@{user_login} - The song you requested is either too long '>10 min' or too short '<90 sec'"
             )
